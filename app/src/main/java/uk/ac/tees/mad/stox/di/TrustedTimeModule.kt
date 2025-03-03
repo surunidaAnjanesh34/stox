@@ -5,8 +5,8 @@ import com.google.android.gms.time.TrustedTime
 import com.google.android.gms.time.TrustedTimeClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
-import uk.ac.tees.mad.stox.time.TrustedTimeClientAccessor
-import uk.ac.tees.mad.stox.time.TrustedTimeManager
+import uk.ac.tees.mad.stox.model.time.TrustedTimeClientAccessor
+import uk.ac.tees.mad.stox.model.time.TrustedTimeManager
 
 val trustedTimeModule = module {
     single<TrustedTimeClientAccessor> {

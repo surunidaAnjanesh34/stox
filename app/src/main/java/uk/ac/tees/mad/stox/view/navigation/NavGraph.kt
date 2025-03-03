@@ -1,30 +1,42 @@
 package uk.ac.tees.mad.stox.view.navigation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import androidx.navigation.toRoute
-import uk.ac.tees.mad.stox.time.TrustedTimeManager
+import org.koin.androidx.compose.koinViewModel
+import uk.ac.tees.mad.stox.model.time.TrustedTimeManager
+import uk.ac.tees.mad.stox.ui.screens.SignInScreen
+import uk.ac.tees.mad.stox.ui.screens.SignUpScreen
 import uk.ac.tees.mad.stox.ui.screens.SplashScreen
+import uk.ac.tees.mad.stox.viewmodel.MainViewModel
 
+const val CARD_TRANSITION_KEY = "CARD_TRANSITION_KEY"
+
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun SetupNavGraph(navController: NavHostController, trustedTimeManager: TrustedTimeManager) {
+fun SetupNavGraph(
+    navController: NavHostController,
+    trustedTimeManager: TrustedTimeManager,
+    mainViewModel: MainViewModel = koinViewModel()) {
+    SharedTransitionLayout {
     NavHost(
         navController = navController, startDestination = Dest.SplashScreen
     ) {
         composable<Dest.SplashScreen> {
-            SplashScreen(navController = navController, trustedTimeManager = trustedTimeManager)
+            SplashScreen(navController = navController, mainViewModel = mainViewModel)
         }
-//        navigation<SubGraph.AuthGraph>(startDestination = Dest.SignInScreen) {
-//            composable<Dest.SignInScreen> {
-//                SignInScreen(navController = navController)
-//            }
-//            composable<Dest.SignUpScreen> {
-//                SignUpScreen(navController = navController)
-//            }
-//        }
+        navigation<SubGraph.AuthGraph>(startDestination = Dest.SignInScreen) {
+            composable<Dest.SignInScreen> {
+                SignInScreen(navController = navController, animatedVisibilityScope = this)
+            }
+            composable<Dest.SignUpScreen> {
+                SignUpScreen(navController = navController, animatedVisibilityScope = this)
+            }
+        }
 //        navigation<SubGraph.HomeGraph>(startDestination = Dest.HomeScreen) {
 //            composable<Dest.HomeScreen> {
 //                HomeScreen(navController = navController)
@@ -46,5 +58,6 @@ fun SetupNavGraph(navController: NavHostController, trustedTimeManager: TrustedT
 //                ProfileScreen(navController = navController)
 //            }
 //        }
+    }
     }
 }

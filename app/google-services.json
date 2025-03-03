@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "709924243085",
+    "project_id": "stox-48787",
+    "storage_bucket": "stox-48787.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709924243085:android:3adc8e58764cb2ddf4c4c4",
+        "android_client_info": {
+          "package_name": "uk.ac.tees.mad.stox"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSQ1xAEAvts7Op9sn40Uvxic0C_19oZeI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

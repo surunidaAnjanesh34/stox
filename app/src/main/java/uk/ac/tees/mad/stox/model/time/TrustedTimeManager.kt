@@ -1,4 +1,4 @@
-package uk.ac.tees.mad.stox.time
+package uk.ac.tees.mad.stox.model.time
 
 import android.util.Log
 import com.google.android.gms.time.TrustedTimeClient
