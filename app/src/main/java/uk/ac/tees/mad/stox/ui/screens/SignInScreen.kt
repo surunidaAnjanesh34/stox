@@ -25,20 +25,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.WavingHand
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +58,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,17 +84,32 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.R
+import uk.ac.tees.mad.stox.model.dataclass.firebase.AuthResult
 import uk.ac.tees.mad.stox.view.navigation.CARD_TRANSITION_KEY
 import uk.ac.tees.mad.stox.view.navigation.Dest
+import uk.ac.tees.mad.stox.view.navigation.SubGraph
+import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun SharedTransitionScope.SignInScreen(navController: NavHostController, animatedVisibilityScope: AnimatedVisibilityScope) {
+fun SharedTransitionScope.SignInScreen(navController: NavHostController,
+                                       animatedVisibilityScope: AnimatedVisibilityScope,
+                                       viewmodel:SignInScreenViewModel= koinViewModel()
+) {
+    val email by viewmodel.email.collectAsStateWithLifecycle()
+    val password by viewmodel.password.collectAsStateWithLifecycle()
+    val isPasswordVisible by viewmodel.isPasswordVisible.collectAsStateWithLifecycle()
+    val isSignInMode by viewmodel.isSignInMode.collectAsStateWithLifecycle()
+    val signInResult by viewmodel.signInResult.collectAsStateWithLifecycle()
+
     val focusManager = LocalFocusManager.current
     val focusRequesterEmail = remember { FocusRequester() }
     val focusRequesterPassword = remember { FocusRequester() }
+
     // Infinite transition for the background gradient animation
     val infiniteTransition = rememberInfiniteTransition(label = "background")
     val targetOffset = with(LocalDensity.current) {
@@ -99,6 +124,7 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
         MaterialTheme.colorScheme.surfaceContainerHighest,
         MaterialTheme.colorScheme.surfaceContainerLowest
     )
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -121,6 +147,71 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                     }},
             contentAlignment = Alignment.Center
         ) {
+
+            if(!isSignInMode){
+                when (val result = signInResult) {
+                    is AuthResult.Loading -> {
+                        AlertDialog(onDismissRequest = {
+                            viewmodel.switchSignInMode()
+                        }, icon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Login,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }, title = { Text(text="Signing In", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }, text = {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }, confirmButton = { })
+                    }
+
+                    is AuthResult.Success -> {
+                        // Handle successful sign-up
+                        navController.navigate(SubGraph.HomeGraph) {
+                            popUpTo(SubGraph.AuthGraph) {
+                                inclusive = true
+                            }
+                        }
+
+                    }
+
+                    is AuthResult.Error -> {
+                        // Handle sign-up error
+                        AlertDialog(icon = {
+                            Icon(
+                                Icons.Default.Error,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }, title = { Text(text = "Error", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }, text = {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(text = result.exception.message.toString(),
+                                    color = MaterialTheme.colorScheme.onSurface)
+                            }
+                        }, confirmButton = {
+                            TextButton(onClick = {
+                                viewmodel.switchSignInMode()
+                            }) {
+                                Text(text = "Retry?", fontWeight = FontWeight.Bold)
+                            }
+                        }, onDismissRequest = {
+                            viewmodel.switchSignInMode()
+                        })
+                    }
+                }
+            }
+
             // Elevated Card
             Card(
                 modifier = Modifier
@@ -169,24 +260,31 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Welcome Back Text
+                    Row(modifier = Modifier.padding(bottom = 16.dp)){
+                        Icon(
+                            Icons.Default.WavingHand,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Welcome Back",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp),
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
+                    }
+
                     // Email TextField
-                    var email by remember { mutableStateOf("") }
                     OutlinedTextField(
                         value = email,
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(focusRequesterEmail),
                         onValueChange = {
-                            //viewModel.updateEmail(it)
-                            email= it
+                            viewmodel.updateEmail(it)
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
@@ -214,11 +312,9 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                     )
 
                     // Password TextField
-                    var password by remember { mutableStateOf("") }
                     OutlinedTextField(value = password,
                         onValueChange = {
-                            //viewModel.updatePassword(it)
-                            password = it
+                            viewmodel.updatePassword(it)
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
@@ -237,7 +333,7 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(focusRequesterPassword),
-                        //visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
@@ -248,14 +344,15 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true,
                         trailingIcon = {
-//                            IconButton(onClick = {
-//                                viewModel.togglePasswordVisibility()
-//                            }) {
-//                                Icon(
-//                                    imageVector = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-//                                    contentDescription = "Toggle Password Visibility"
-//                                )
-//                            }
+                            IconButton(onClick = {
+                                viewmodel.togglePasswordVisibility()
+                            }) {
+                                Icon(
+                                    imageVector = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = "Toggle Password Visibility",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         })
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -263,18 +360,19 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                     Button(
                         enabled = email.isNotBlank() && password.isNotBlank(),
                         onClick = {
-                            // Placeholder for sign in logic
-                            println("Sign in button clicked with email: $email, password: $password")
-
-                            //viewModel.signIn(email, password)
-                            //viewModel.switchSignInMode()
-
-                            //onSignInSuccess()
+                            viewmodel.signIn(email, password)
+                            viewmodel.switchSignInMode()
                         },
                         modifier = Modifier
                             .fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp)
                     ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Login,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             "Sign In", style = MaterialTheme.typography.titleMedium
                         )
@@ -282,7 +380,6 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Don't have an account?
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -295,6 +392,12 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController, animate
                         TextButton(onClick = {
                             navController.navigate(Dest.SignUpScreen)
                         }) {
+                            Icon(
+                                Icons.Default.HowToReg,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Sign Up", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         }
                     }

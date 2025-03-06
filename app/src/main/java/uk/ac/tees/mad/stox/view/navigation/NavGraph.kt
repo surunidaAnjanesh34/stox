@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.model.time.TrustedTimeManager
+import uk.ac.tees.mad.stox.ui.screens.HomeScreen
 import uk.ac.tees.mad.stox.ui.screens.SignInScreen
 import uk.ac.tees.mad.stox.ui.screens.SignUpScreen
 import uk.ac.tees.mad.stox.ui.screens.SplashScreen
@@ -37,10 +38,10 @@ fun SetupNavGraph(
                 SignUpScreen(navController = navController, animatedVisibilityScope = this)
             }
         }
-//        navigation<SubGraph.HomeGraph>(startDestination = Dest.HomeScreen) {
-//            composable<Dest.HomeScreen> {
-//                HomeScreen(navController = navController)
-//            }
+        navigation<SubGraph.HomeGraph>(startDestination = Dest.HomeScreen) {
+            composable<Dest.HomeScreen> {
+                HomeScreen(navController = navController)
+            }
 //            composable<Dest.NowPlayingScreen> {
 //                val args = it.toRoute<Dest.NowPlayingScreen>()
 //                NowPlayingScreen(
@@ -57,7 +58,7 @@ fun SetupNavGraph(
 //            composable<Dest.ProfileScreen> {
 //                ProfileScreen(navController = navController)
 //            }
-//        }
+        }
     }
     }
 }

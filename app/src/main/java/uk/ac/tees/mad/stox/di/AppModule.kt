@@ -8,6 +8,8 @@ import uk.ac.tees.mad.stox.model.network.NetworkConnectivityManager
 import uk.ac.tees.mad.stox.model.repository.AuthRepository
 import uk.ac.tees.mad.stox.model.repository.NetworkRepository
 import uk.ac.tees.mad.stox.viewmodel.MainViewModel
+import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
+import uk.ac.tees.mad.stox.viewmodel.SignUpScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SplashScreenViewModel
 
 val appModule = module {
@@ -25,4 +27,6 @@ val appModule = module {
     // ViewModels
     viewModelOf(::MainViewModel)
     viewModelOf(::SplashScreenViewModel)
+    viewModelOf(::SignInScreenViewModel)
+    viewModelOf(::SignUpScreenViewModel)
 }
