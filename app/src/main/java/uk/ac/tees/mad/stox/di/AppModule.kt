@@ -10,6 +10,7 @@ import uk.ac.tees.mad.stox.model.repository.AuthRepository
 import uk.ac.tees.mad.stox.model.repository.NetworkRepository
 import uk.ac.tees.mad.stox.model.retrofit.AlphaVantageRetrofitInstance
 import uk.ac.tees.mad.stox.model.serviceapi.alphaVantageApiService
+import uk.ac.tees.mad.stox.viewmodel.HomeScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.MainViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignUpScreenViewModel
@@ -36,4 +37,5 @@ val appModule = module {
     viewModelOf(::SplashScreenViewModel)
     viewModelOf(::SignInScreenViewModel)
     viewModelOf(::SignUpScreenViewModel)
+    viewModelOf(::HomeScreenViewModel)
 }

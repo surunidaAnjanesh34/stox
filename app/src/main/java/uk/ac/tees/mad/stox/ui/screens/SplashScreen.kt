@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.R
-import uk.ac.tees.mad.stox.model.dataclass.splashscreen.LoadingState
+import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.view.navigation.Dest
 import uk.ac.tees.mad.stox.view.navigation.SubGraph
 import uk.ac.tees.mad.stox.view.utils.LoadingErrorScreen

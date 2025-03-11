@@ -1,4 +1,4 @@
-package uk.ac.tees.mad.stox.model.dataclass.splashscreen
+package uk.ac.tees.mad.stox.model.dataclass.state
 
 sealed class LoadingState<out T> {
     object Loading : LoadingState<Nothing>()

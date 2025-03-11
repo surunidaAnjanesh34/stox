@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import uk.ac.tees.mad.stox.model.dataclass.splashscreen.LoadingState
+import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.model.repository.AuthRepository
 import uk.ac.tees.mad.stox.model.repository.NetworkRepository
 
