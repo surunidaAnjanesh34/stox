@@ -12,7 +12,7 @@ import uk.ac.tees.mad.stox.model.repository.NetworkRepository
 class MainViewModel(
     private val networkRepository: NetworkRepository,
     private val authRepository: AuthRepository,
-): ViewModel()  {
+) : ViewModel() {
 
     private val _databaseIsEmpty = MutableStateFlow(true)
     val databaseIsEmpty: StateFlow<Boolean> = _databaseIsEmpty.asStateFlow()

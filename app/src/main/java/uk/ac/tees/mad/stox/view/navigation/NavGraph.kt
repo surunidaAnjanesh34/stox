@@ -22,26 +22,27 @@ const val CARD_TRANSITION_KEY = "CARD_TRANSITION_KEY"
 fun SetupNavGraph(
     navController: NavHostController,
     trustedTimeManager: TrustedTimeManager,
-    mainViewModel: MainViewModel = koinViewModel()) {
+    mainViewModel: MainViewModel = koinViewModel()
+) {
     SharedTransitionLayout {
-    NavHost(
-        navController = navController, startDestination = Dest.SplashScreen
-    ) {
-        composable<Dest.SplashScreen> {
-            SplashScreen(navController = navController, mainViewModel = mainViewModel)
-        }
-        navigation<SubGraph.AuthGraph>(startDestination = Dest.SignInScreen) {
-            composable<Dest.SignInScreen> {
-                SignInScreen(navController = navController, animatedVisibilityScope = this)
+        NavHost(
+            navController = navController, startDestination = Dest.SplashScreen
+        ) {
+            composable<Dest.SplashScreen> {
+                SplashScreen(navController = navController, mainViewModel = mainViewModel)
             }
-            composable<Dest.SignUpScreen> {
-                SignUpScreen(navController = navController, animatedVisibilityScope = this)
+            navigation<SubGraph.AuthGraph>(startDestination = Dest.SignInScreen) {
+                composable<Dest.SignInScreen> {
+                    SignInScreen(navController = navController, animatedVisibilityScope = this)
+                }
+                composable<Dest.SignUpScreen> {
+                    SignUpScreen(navController = navController, animatedVisibilityScope = this)
+                }
             }
-        }
-        navigation<SubGraph.HomeGraph>(startDestination = Dest.HomeScreen) {
-            composable<Dest.HomeScreen> {
-                HomeScreen(navController = navController)
-            }
+            navigation<SubGraph.HomeGraph>(startDestination = Dest.HomeScreen) {
+                composable<Dest.HomeScreen> {
+                    HomeScreen(navController = navController)
+                }
 //            composable<Dest.NowPlayingScreen> {
 //                val args = it.toRoute<Dest.NowPlayingScreen>()
 //                NowPlayingScreen(
@@ -58,7 +59,7 @@ fun SetupNavGraph(
 //            composable<Dest.ProfileScreen> {
 //                ProfileScreen(navController = navController)
 //            }
+            }
         }
-    }
     }
 }

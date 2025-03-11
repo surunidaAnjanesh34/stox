@@ -3,18 +3,14 @@ package uk.ac.tees.mad.stox.ui.screens
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,18 +29,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
-import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,20 +51,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalDensity
@@ -96,9 +84,10 @@ import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun SharedTransitionScope.SignInScreen(navController: NavHostController,
-                                       animatedVisibilityScope: AnimatedVisibilityScope,
-                                       viewmodel:SignInScreenViewModel= koinViewModel()
+fun SharedTransitionScope.SignInScreen(
+    navController: NavHostController,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    viewmodel: SignInScreenViewModel = koinViewModel()
 ) {
     val email by viewmodel.email.collectAsStateWithLifecycle()
     val password by viewmodel.password.collectAsStateWithLifecycle()
@@ -126,8 +115,7 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
     )
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -144,11 +132,11 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                     )
                     onDrawBehind {
                         drawRect(brush)
-                    }},
-            contentAlignment = Alignment.Center
+                    }
+                }, contentAlignment = Alignment.Center
         ) {
 
-            if(!isSignInMode){
+            if (!isSignInMode) {
                 when (val result = signInResult) {
                     is AuthResult.Loading -> {
                         AlertDialog(onDismissRequest = {
@@ -160,7 +148,13 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
-                        }, title = { Text(text="Signing In", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }, text = {
+                        }, title = {
+                            Text(
+                                text = "Signing In",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }, text = {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 CircularProgressIndicator(
                                     modifier = Modifier
@@ -190,14 +184,22 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
-                        }, title = { Text(text = "Error", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }, text = {
+                        }, title = {
+                            Text(
+                                text = "Error",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }, text = {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text(text = result.exception.message.toString(),
-                                    color = MaterialTheme.colorScheme.onSurface)
+                                Text(
+                                    text = result.exception.message.toString(),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }, confirmButton = {
                             TextButton(onClick = {
@@ -260,7 +262,7 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Welcome Back Text
-                    Row(modifier = Modifier.padding(bottom = 16.dp)){
+                    Row(modifier = Modifier.padding(bottom = 16.dp)) {
                         Icon(
                             Icons.Default.WavingHand,
                             contentDescription = null,
@@ -268,12 +270,12 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Welcome Back",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                        Text(
+                            text = "Welcome Back",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
 
                     }
 
@@ -292,7 +294,11 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        label = { Text(text = "Email", color = MaterialTheme.colorScheme.onSurface) },
+                        label = {
+                            Text(
+                                text = "Email", color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         leadingIcon = {
                             Icon(
                                 Icons.Filled.Email,
@@ -301,8 +307,7 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                             )
                         },
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
+                            keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(onNext = {
                             focusRequesterPassword.requestFocus()
@@ -322,7 +327,11 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        label = { Text(text="Password", color = MaterialTheme.colorScheme.onSurface) },
+                        label = {
+                            Text(
+                                text = "Password", color = MaterialTheme.colorScheme.onSurface
+                            )
+                        },
                         leadingIcon = {
                             Icon(
                                 Icons.Filled.Lock,
@@ -335,8 +344,7 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                             .focusRequester(focusRequesterPassword),
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
+                            keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(onDone = {
                             focusManager.clearFocus()
@@ -358,14 +366,10 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        enabled = email.isNotBlank() && password.isNotBlank(),
-                        onClick = {
+                        enabled = email.isNotBlank() && password.isNotBlank(), onClick = {
                             viewmodel.signIn(email, password)
                             viewmodel.switchSignInMode()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                        }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.Login,
@@ -398,7 +402,11 @@ fun SharedTransitionScope.SignInScreen(navController: NavHostController,
                                 modifier = Modifier.size(24.dp),
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "Sign Up", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "Sign Up",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }

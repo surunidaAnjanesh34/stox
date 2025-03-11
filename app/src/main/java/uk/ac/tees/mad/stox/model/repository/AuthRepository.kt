@@ -78,9 +78,8 @@ class AuthRepository(private val auth: FirebaseAuth) {
         try {
             val user = auth.currentUser
             if (user != null) {
-                val profileUpdates = UserProfileChangeRequest.Builder()
-                    .setDisplayName(displayName)
-                    .build()
+                val profileUpdates =
+                    UserProfileChangeRequest.Builder().setDisplayName(displayName).build()
 
                 user.updateProfile(profileUpdates).await()
                 emit(AuthResult.Success(true))

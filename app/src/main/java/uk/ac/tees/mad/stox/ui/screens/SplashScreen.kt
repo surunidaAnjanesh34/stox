@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.R
 import uk.ac.tees.mad.stox.model.dataclass.splashscreen.LoadingState
@@ -71,7 +70,8 @@ fun SplashScreen(
                         var startAnimation by remember { mutableStateOf(false) }
                         val alphaAnim = animateFloatAsState(
                             targetValue = if (startAnimation) 1f else 0f,
-                            animationSpec = tween(durationMillis = 3000), label = ""
+                            animationSpec = tween(durationMillis = 3000),
+                            label = ""
                         )
                         LaunchedEffect(key1 = true) {
                             startAnimation = true

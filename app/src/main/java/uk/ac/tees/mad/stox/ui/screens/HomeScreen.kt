@@ -1,6 +1,5 @@
 package uk.ac.tees.mad.stox.ui.screens
 
-import android.content.Context
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -25,10 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,64 +62,69 @@ import uk.ac.tees.mad.stox.R
 @Composable
 fun HomeScreen(navController: NavHostController) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    Scaffold(
-        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+    Scaffold(modifier = Modifier
+        .fillMaxSize()
+        .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Stox",
+            TopAppBar(title = {
+                Text(
+                    text = "Stox",
                     maxLines = 1,
                     fontSize = 30.sp,
                     overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface) },
-                navigationIcon = {
-                    Row{
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }, navigationIcon = {
+                Row {
                     Spacer(modifier = Modifier.padding(8.dp))
                     Image(
                         painter = painterResource(id = R.drawable.stox),
                         contentDescription = "App Logo",
                         modifier = Modifier.size(36.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                    )}
-                },
-                actions = {
-                    IconButton(onClick = { /* doSomething() */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "Localized description",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = { /* doSomething() */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "Localized description",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
+                    )
+                }
+            }, actions = {
+                IconButton(onClick = { /* doSomething() */ }) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Localized description",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                IconButton(onClick = { /* doSomething() */ }) {
+                    Icon(
+                        imageVector = Icons.Filled.AccountCircle,
+                        contentDescription = "Localized description",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }, scrollBehavior = scrollBehavior
             )
-        }
-    ) { innerPadding ->
-        FavouriteStocksList(innerPadding=innerPadding)
+        }) { innerPadding ->
+        FavouriteStocksList(innerPadding = innerPadding)
     }
 }
 
 @Composable
-fun FavouriteStocksList(innerPadding: PaddingValues){
-    LazyVerticalGrid(GridCells.Adaptive(400.dp), modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-        item(
-            span = {
-                GridItemSpan(maxLineSpan)
-            }
-        ){
+fun FavouriteStocksList(innerPadding: PaddingValues) {
+    LazyVerticalGrid(
+        GridCells.Adaptive(400.dp), modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+    ) {
+        item(span = {
+            GridItemSpan(maxLineSpan)
+        }) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
-            ){
-                Text(text = "Favourite Stocks",
+            ) {
+                Text(
+                    text = "Favourite Stocks",
                     style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(16.dp))
+                    modifier = Modifier.padding(16.dp)
+                )
                 HorizontalDivider(
                     color = MaterialTheme.colorScheme.outline,
                     thickness = 2.dp,
@@ -131,26 +132,26 @@ fun FavouriteStocksList(innerPadding: PaddingValues){
                 )
             }
         }
-        item{
+        item {
             FavouriteStockItem()
         }
-        item{
+        item {
             FavouriteStockItem()
         }
-        item{
+        item {
             FavouriteStockItem()
         }
-        item{
+        item {
             FavouriteStockItem()
         }
-        item{
+        item {
             FavouriteStockItem()
         }
     }
 }
 
 @Composable
-fun FavouriteStockItem(){
+fun FavouriteStockItem() {
     Card(
         elevation = CardDefaults.cardElevation(8.dp),
         modifier = Modifier
@@ -196,69 +197,90 @@ fun FavouriteStockItem(){
                 onDrawBehind {
                     drawRect(brush)
                 }
-            }.padding(vertical = 16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            }
+            .padding(vertical = 16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically){
-                Text(text = "WIPRO.BSE",
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "WIPRO.BSE",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface)
-                IconButton(
-                    onClick = {/* doSomething() */}
-                ) {
-                    Icon(imageVector = Icons.Filled.Bookmark,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(onClick = {/* doSomething() */ }) {
+                    Icon(
+                        imageVector = Icons.Filled.Bookmark,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface)
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Column (
-                ) {
-                    Text(text = "₹313.15",
+                Column {
+                    Text(
+                        text = "₹313.15",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold)
+                        fontWeight = FontWeight.Bold
+                    )
                     Row(
                         verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Icon(imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                             contentDescription = null,
-                            tint = Color.Red)
+                            tint = Color.Red
+                        )
                         Spacer(modifier = Modifier.padding(4.dp))
-                        Text(text = "-0.90 (-0.2866%)",
+                        Text(
+                            text = "-0.90 (-0.2866%)",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Red)
+                            color = Color.Red
+                        )
                     }
                 }
-                Column (
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.Bottom
+                Column(
+                    horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Bottom
                 ) {
-                    Text(text="Previous Close: ₹314.05",
+                    Text(
+                        text = "Previous Close: ₹314.05",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface)
-                    Text(text="Vol: 257273",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Vol: 257273",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface)
-                    Text(text = "H: ₹314.30 L: ₹310.40",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "H: ₹314.30 L: ₹310.40",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface)
-                    Text(text = "Last Trade: 2025-02-20",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Last Trade: 2025-02-20",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface)
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true,showSystemUi = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun HomeScreenPreview(){
+fun HomeScreenPreview() {
     HomeScreen(
         navController = NavHostController(
             LocalContext.current

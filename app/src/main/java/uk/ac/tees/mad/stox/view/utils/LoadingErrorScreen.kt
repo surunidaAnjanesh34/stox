@@ -42,8 +42,7 @@ fun LoadingErrorScreen(
         Icon(
             imageVector = Icons.Outlined.Warning,
             contentDescription = "Error Icon",
-            modifier = Modifier
-                .size(100.dp),
+            modifier = Modifier.size(100.dp),
             tint = MaterialTheme.colorScheme.error
         )
 

@@ -5,8 +5,11 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import uk.ac.tees.mad.stox.model.network.NetworkConnectivityManager
+import uk.ac.tees.mad.stox.model.repository.AlphaVantageRepository
 import uk.ac.tees.mad.stox.model.repository.AuthRepository
 import uk.ac.tees.mad.stox.model.repository.NetworkRepository
+import uk.ac.tees.mad.stox.model.retrofit.AlphaVantageRetrofitInstance
+import uk.ac.tees.mad.stox.model.serviceapi.alphaVantageApiService
 import uk.ac.tees.mad.stox.viewmodel.MainViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignUpScreenViewModel
@@ -23,6 +26,10 @@ val appModule = module {
     // Firebase
     single { FirebaseAuth.getInstance() }
     single { AuthRepository(get()) }
+
+    // Alpha Vantage
+    single<alphaVantageApiService> { AlphaVantageRetrofitInstance.create() }
+    single { AlphaVantageRepository(get()) }
 
     // ViewModels
     viewModelOf(::MainViewModel)

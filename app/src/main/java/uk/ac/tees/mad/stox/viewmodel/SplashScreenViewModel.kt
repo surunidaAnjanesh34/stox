@@ -60,15 +60,15 @@ class SplashScreenViewModel(
                     delay(4000)
                     _offlineMode.value = false
                     val message = "No internet connection"
-                    if(authRepository.isSignedIn()){
-                        if(databaseIsEmpty.value){
+                    if (authRepository.isSignedIn()) {
+                        if (databaseIsEmpty.value) {
                             _offlineMode.value = false
                             _loadingState.value = LoadingState.Error(message)
                         } else {
                             _offlineMode.value = true
                             _loadingState.value = LoadingState.Success(Any())
                         }
-                    } else{
+                    } else {
                         _offlineMode.value = false
                         _loadingState.value = LoadingState.Error(message)
                     }

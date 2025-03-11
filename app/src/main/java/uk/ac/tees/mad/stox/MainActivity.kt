@@ -60,7 +60,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             StoxTheme {
                 val navController = rememberNavController()
-                SetupNavGraph(navController = navController, trustedTimeManager=trustedTimeManager)
+                SetupNavGraph(
+                    navController = navController, trustedTimeManager = trustedTimeManager
+                )
             }
         }
     }

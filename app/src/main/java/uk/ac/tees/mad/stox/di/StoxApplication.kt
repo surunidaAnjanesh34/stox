@@ -12,7 +12,7 @@ class StoxApplication : Application() {
         startKoin {
             androidLogger(Level.DEBUG)
             androidContext(this@StoxApplication)
-            modules(appModule,trustedTimeModule)
+            modules(appModule, trustedTimeModule)
         }
     }
 }
