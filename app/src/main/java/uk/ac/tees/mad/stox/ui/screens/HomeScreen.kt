@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,15 +68,15 @@ import uk.ac.tees.mad.stox.viewmodel.HomeScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController,
-               viewmodel: HomeScreenViewModel = koinViewModel()
+fun HomeScreen(
+    navController: NavHostController, viewmodel: HomeScreenViewModel = koinViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val globalQuoteState by viewmodel.globalQuoteState.collectAsStateWithLifecycle()
 
     // Example: Fetch data when the screen is first composed
     LaunchedEffect(key1 = true) {
-       viewmodel.getGlobalQuote("TATASTEEL.BSE") // Replace with the desired symbol
+        viewmodel.getGlobalQuote("TATASTEEL.BSE") // Replace with the desired symbol
     }
     Scaffold(modifier = Modifier
         .fillMaxSize()
@@ -129,14 +128,14 @@ fun HomeScreen(navController: NavHostController,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
             }
 
             is LoadingState.Success -> {
                 // Show the data
                 var globalQuote = (globalQuoteState as LoadingState.Success<GlobalQuote>).data
-                globalQuote= GlobalQuote(
+                globalQuote = GlobalQuote(
                     symbol = "TATASTEEL.BSE",
                     open = "135.5500",
                     high = "138.3500",
@@ -148,8 +147,8 @@ fun HomeScreen(navController: NavHostController,
                     change = "2.1500",
                     changePercent = "1.5826%"
                 )
-                if (globalQuote != null){
-                FavouriteStocksList(innerPadding = innerPadding, globalQuote = globalQuote)
+                if (globalQuote != null) {
+                    FavouriteStocksList(innerPadding = innerPadding, globalQuote = globalQuote)
                 } else {
                     Column(
                         modifier = Modifier
@@ -173,7 +172,7 @@ fun HomeScreen(navController: NavHostController,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                Text(text = "Error: ${(globalQuoteState as LoadingState.Error).message}")
+                    Text(text = "Error: ${(globalQuoteState as LoadingState.Error).message}")
                 }
             }
         }
@@ -298,18 +297,19 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if(globalQuote.change.contains("-")){
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.TrendingDown,
-                            contentDescription = null,
-                            tint = Color.Red
-                        )
-                        Spacer(modifier = Modifier.padding(4.dp))
-                        Text(
-                            text = "${globalQuote.change} (${globalQuote.changePercent})",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Red
-                        )} else {
+                        if (globalQuote.change.contains("-")) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = null,
+                                tint = Color.Red
+                            )
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text(
+                                text = "${globalQuote.change} (${globalQuote.changePercent})",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Red
+                            )
+                        } else {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                 contentDescription = null,

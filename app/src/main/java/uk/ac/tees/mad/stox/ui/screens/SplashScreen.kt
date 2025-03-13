@@ -80,7 +80,8 @@ fun SplashScreen(
                     }
 
                     is LoadingState.Error -> {
-                        LoadingErrorScreen(errorMessage = state.message,
+                        LoadingErrorScreen(
+                            errorMessage = state.message,
                             onRetry = { viewmodel.startLoading() })
                     }
 

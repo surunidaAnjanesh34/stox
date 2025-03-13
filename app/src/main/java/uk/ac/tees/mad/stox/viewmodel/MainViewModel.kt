@@ -24,7 +24,8 @@ class MainViewModel(
     private val _dataFromDB = MutableStateFlow<List<Any>>(emptyList())
     val dataFromDB: StateFlow<List<Any>> = _dataFromDB.asStateFlow()
 
-    private val _globalQuoteState = MutableStateFlow<LoadingState<GlobalQuote>>(LoadingState.Loading)
+    private val _globalQuoteState =
+        MutableStateFlow<LoadingState<GlobalQuote>>(LoadingState.Loading)
     val globalQuoteState: StateFlow<LoadingState<GlobalQuote>> = _globalQuoteState.asStateFlow()
 
     val isNetworkAvailable: MutableStateFlow<Boolean> = MutableStateFlow(false)
