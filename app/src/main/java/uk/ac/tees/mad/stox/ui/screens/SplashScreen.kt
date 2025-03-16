@@ -35,23 +35,13 @@ import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.view.navigation.Dest
 import uk.ac.tees.mad.stox.view.navigation.SubGraph
 import uk.ac.tees.mad.stox.view.utils.LoadingErrorScreen
-import uk.ac.tees.mad.stox.viewmodel.MainViewModel
 import uk.ac.tees.mad.stox.viewmodel.SplashScreenViewModel
 
 @Composable
 fun SplashScreen(
-    navController: NavHostController,
-    mainViewModel: MainViewModel,
-    viewmodel: SplashScreenViewModel = koinViewModel()
+    navController: NavHostController, viewmodel: SplashScreenViewModel = koinViewModel()
 ) {
-    val databaseIsEmpty by mainViewModel.databaseIsEmpty.collectAsStateWithLifecycle()
-
     val loadingState by viewmodel.loadingState.collectAsStateWithLifecycle()
-    val offlineMode by viewmodel.offlineMode.collectAsStateWithLifecycle()
-
-    LaunchedEffect(key1 = databaseIsEmpty) {
-        viewmodel.updateDatabaseIsEmpty(databaseIsEmpty)
-    }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Box(
@@ -88,18 +78,9 @@ fun SplashScreen(
                     is LoadingState.Success -> {
                         LaunchedEffect(key1 = Unit) {
                             if (viewmodel.isSignedIn()) {
-                                if (offlineMode) {
-                                    // Offline mode, user is signed in, navigate to home
-                                    navController.navigate(SubGraph.HomeGraph) {
-                                        popUpTo(Dest.SplashScreen) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } else {
-                                    navController.navigate(SubGraph.HomeGraph) {
-                                        popUpTo(Dest.SplashScreen) {
-                                            inclusive = true
-                                        }
+                                navController.navigate(SubGraph.HomeGraph) {
+                                    popUpTo(Dest.SplashScreen) {
+                                        inclusive = true
                                     }
                                 }
                             } else {

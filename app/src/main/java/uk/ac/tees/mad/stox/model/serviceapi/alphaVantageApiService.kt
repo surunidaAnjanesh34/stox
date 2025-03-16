@@ -11,7 +11,6 @@ interface alphaVantageApiService {
     suspend fun getGlobalQuote(
         @Query("function") function: String = "GLOBAL_QUOTE",
         @Query("symbol") symbol: String,
-        @Query("datatype") datatype: String = "json",
         @Query("apikey") apiKey: String
     ): Response<GlobalQuoteResponse>
 

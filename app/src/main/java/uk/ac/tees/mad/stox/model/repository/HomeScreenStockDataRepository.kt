@@ -14,8 +14,7 @@ class HomeScreenStockDataRepository(private val homeScreenStockDataDao: HomeScre
     }
 
     suspend fun getHomeScreenStockDataForUserAndSymbol(
-        userId: String,
-        symbol: String
+        userId: String, symbol: String
     ): HomeScreenStockData? {
         return homeScreenStockDataDao.getHomeScreenStockDataForUserAndSymbol(userId, symbol)
     }
@@ -29,11 +28,12 @@ class HomeScreenStockDataRepository(private val homeScreenStockDataDao: HomeScre
     }
 
     suspend fun updateHomeScreenStockData(
-        userId: String,
-        symbol: String,
-        stockData: HomeScreenStockDataItem,
-        timestamp: Long
+        userId: String, symbol: String, stockData: HomeScreenStockDataItem, timestamp: Long
     ) {
         homeScreenStockDataDao.updateHomeScreenStockData(userId, symbol, stockData, timestamp)
+    }
+
+    suspend fun getHomeScreenStockDataCountForUser(userId: String): Int {
+        return homeScreenStockDataDao.getHomeScreenStockDataCountForUser(userId)
     }
 }

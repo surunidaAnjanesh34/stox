@@ -1,5 +1,6 @@
 package uk.ac.tees.mad.stox.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -20,12 +21,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,8 +42,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,58 +54,80 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.R
-import uk.ac.tees.mad.stox.model.dataclass.alphavantage.GlobalQuote
+import uk.ac.tees.mad.stox.model.dataclass.room.HomeScreenStockData
 import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.viewmodel.HomeScreenViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    navController: NavHostController, viewmodel: HomeScreenViewModel = koinViewModel()
+    navController: NavHostController,
+    viewmodel: HomeScreenViewModel = koinViewModel(),
 ) {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val globalQuoteState by viewmodel.globalQuoteState.collectAsStateWithLifecycle()
+    val offlineMode by viewmodel.offlineMode.collectAsStateWithLifecycle()
 
-    // Example: Fetch data when the screen is first composed
-    LaunchedEffect(key1 = true) {
-        viewmodel.getGlobalQuote("TATASTEEL.BSE") // Replace with the desired symbol
-    }
+    val homeScreenUiState by viewmodel.homeScreenUiState.collectAsStateWithLifecycle()
+
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(modifier = Modifier
         .fillMaxSize()
         .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(title = {
-                Text(
-                    text = "Stox",
-                    maxLines = 1,
-                    fontSize = 30.sp,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }, navigationIcon = {
-                Row {
-                    Spacer(modifier = Modifier.padding(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
                     Image(
                         painter = painterResource(id = R.drawable.stox),
                         contentDescription = "App Logo",
                         modifier = Modifier.size(36.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                     )
+                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                    Text(
+                        text = "Stox",
+                        maxLines = 1,
+                        fontSize = 30.sp,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }, navigationIcon = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                    AnimatedVisibility(offlineMode == true) {
+
+                        Icon(
+                            Icons.Outlined.CloudOff,
+                            "Offline",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+
+                    }
+                    AnimatedVisibility(offlineMode == false) {
+                        Icon(Icons.Outlined.CloudDone, "Online", tint = Color.Green)
+                    }
                 }
             }, actions = {
-                IconButton(onClick = { /* doSomething() */ }) {
+                IconButton(onClick = { }) {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Localized description",
@@ -118,7 +144,7 @@ fun HomeScreen(
             }, scrollBehavior = scrollBehavior
             )
         }) { innerPadding ->
-        when (globalQuoteState) {
+        when (homeScreenUiState) {
             is LoadingState.Loading -> {
                 // Show a loading indicator
                 Column(
@@ -133,23 +159,9 @@ fun HomeScreen(
             }
 
             is LoadingState.Success -> {
-                // Show the data
-                var globalQuote = (globalQuoteState as LoadingState.Success<GlobalQuote>).data
-                globalQuote = GlobalQuote(
-                    symbol = "TATASTEEL.BSE",
-                    open = "135.5500",
-                    high = "138.3500",
-                    low = "135.0000",
-                    price = "138.0000",
-                    volume = "1107248",
-                    latestTradingDay = "2025-02-20",
-                    previousClose = "135.8500",
-                    change = "2.1500",
-                    changePercent = "1.5826%"
-                )
-                if (globalQuote != null) {
-                    FavouriteStocksList(innerPadding = innerPadding, globalQuote = globalQuote)
-                } else {
+                val dataFromDB =
+                    (homeScreenUiState as LoadingState.Success<List<HomeScreenStockData>>).data
+                if (dataFromDB.isEmpty()) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -157,9 +169,24 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(text = "No data received from API")
-                        Text(text = "Note:  API rate limit is 25 requests per day")
+                        Text("No stocks added in favourites")
+                        Text("Search for stocks to add to favourites")
                     }
+                } else {
+                    PullToRefreshBox(
+                        isRefreshing = false,
+                        onRefresh = { viewmodel.startLoading() },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                    ) {
+                        FavouriteStocksList(
+                            innerPadding = innerPadding,
+                            homeScreenStockDataList = dataFromDB,
+                            viewmodel = viewmodel
+                        )
+                    }
+
                 }
             }
 
@@ -172,19 +199,22 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "Error: ${(globalQuoteState as LoadingState.Error).message}")
+                    Text(text = "Error: ${(homeScreenUiState as LoadingState.Error).message}")
                 }
             }
         }
+
     }
 }
 
 @Composable
-fun FavouriteStocksList(innerPadding: PaddingValues, globalQuote: GlobalQuote) {
+fun FavouriteStocksList(
+    innerPadding: PaddingValues,
+    homeScreenStockDataList: List<HomeScreenStockData>,
+    viewmodel: HomeScreenViewModel
+) {
     LazyVerticalGrid(
-        GridCells.Adaptive(400.dp), modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
+        GridCells.Adaptive(400.dp), modifier = Modifier.fillMaxSize()
     ) {
         item(span = {
             GridItemSpan(maxLineSpan)
@@ -205,14 +235,17 @@ fun FavouriteStocksList(innerPadding: PaddingValues, globalQuote: GlobalQuote) {
                 )
             }
         }
-        item {
-            FavouriteStockItem(globalQuote = globalQuote)
+        items(homeScreenStockDataList, key = { it.id }) { stockItem ->
+            FavouriteStockItem(homeScreenStockDataItem = stockItem, viewmodel = viewmodel)
         }
     }
 }
 
 @Composable
-fun FavouriteStockItem(globalQuote: GlobalQuote) {
+fun FavouriteStockItem(
+    homeScreenStockDataItem: HomeScreenStockData,
+    viewmodel: HomeScreenViewModel
+) {
     Card(
         elevation = CardDefaults.cardElevation(8.dp),
         modifier = Modifier
@@ -268,13 +301,13 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = globalQuote.symbol,
+                    text = homeScreenStockDataItem.symbol,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                IconButton(onClick = {/* doSomething() */ }) {
+                IconButton(onClick = { viewmodel.remove(homeScreenStockDataItem.symbol) }) {
                     Icon(
-                        imageVector = Icons.Filled.Bookmark,
+                        imageVector = Icons.Filled.Delete,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurface
                     )
@@ -289,7 +322,7 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
             ) {
                 Column {
                     Text(
-                        text = "₹${globalQuote.price}",
+                        text = "₹${homeScreenStockDataItem.stockData.price}",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
@@ -297,7 +330,7 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (globalQuote.change.contains("-")) {
+                        if (homeScreenStockDataItem.stockData.change.contains("-")) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                                 contentDescription = null,
@@ -305,7 +338,7 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
                             )
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text(
-                                text = "${globalQuote.change} (${globalQuote.changePercent})",
+                                text = "${homeScreenStockDataItem.stockData.change} (${homeScreenStockDataItem.stockData.changePercent})",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Red
                             )
@@ -316,34 +349,50 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
                                 tint = Color.Green
                             )
                             Text(
-                                text = "+${globalQuote.change} (+${globalQuote.changePercent})",
+                                text = "+${homeScreenStockDataItem.stockData.change} (+${homeScreenStockDataItem.stockData.changePercent})",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Green
                             )
 
                         }
                     }
+                    Text(
+                        text = "Last Updated:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${
+                            SimpleDateFormat("HH:mm:ss, dd/MM/yyyy").format(
+                                    Date(
+                                        homeScreenStockDataItem.timestamp!!
+                                    )
+                                )
+                        }",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 Column(
                     horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
-                        text = "Previous Close: ₹${globalQuote.previousClose}",
+                        text = "Previous Close: ₹${homeScreenStockDataItem.stockData.previousClose}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Vol: ${globalQuote.volume}",
+                        text = "Vol: ${homeScreenStockDataItem.stockData.volume}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "H: ₹${globalQuote.high} L: ₹${globalQuote.low}",
+                        text = "H: ₹${homeScreenStockDataItem.stockData.high} L: ₹${homeScreenStockDataItem.stockData.low}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Last Trade: ${globalQuote.latestTradingDay}",
+                        text = "Last Trade: ${homeScreenStockDataItem.stockData.latestTradingDay}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -351,14 +400,4 @@ fun FavouriteStockItem(globalQuote: GlobalQuote) {
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen(
-        navController = NavHostController(
-            LocalContext.current
-        )
-    )
 }

@@ -10,23 +10,19 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.model.repository.AuthRepository
+import uk.ac.tees.mad.stox.model.repository.HomeScreenStockDataRepository
 import uk.ac.tees.mad.stox.model.repository.NetworkRepository
 
 class SplashScreenViewModel(
     private val networkRepository: NetworkRepository,
     private val authRepository: AuthRepository,
+    private val homeScreenStockDataRepository: HomeScreenStockDataRepository,
 ) : ViewModel() {
 
     private val _loadingState = MutableStateFlow<LoadingState<Any>>(LoadingState.Loading)
     val loadingState: StateFlow<LoadingState<Any>> = _loadingState.asStateFlow()
 
     val isNetworkAvailable: MutableStateFlow<Boolean> = MutableStateFlow(false)
-
-    private val _databaseIsEmpty = MutableStateFlow(true)
-    val databaseIsEmpty = _databaseIsEmpty.asStateFlow()
-
-    private val _offlineMode = MutableStateFlow(false)
-    val offlineMode: StateFlow<Boolean> = _offlineMode.asStateFlow()
 
     private fun observeNetworkConnectivity() {
         viewModelScope.launch {
@@ -53,23 +49,23 @@ class SplashScreenViewModel(
                 if (isAvailable) {
                     _loadingState.value = LoadingState.Loading
                     delay(4000)
-                    _offlineMode.value = false
                     _loadingState.value = LoadingState.Success(Any())
                 } else {
                     _loadingState.value = LoadingState.Loading
                     delay(4000)
-                    _offlineMode.value = false
                     val message = "No internet connection"
                     if (authRepository.isSignedIn()) {
-                        if (databaseIsEmpty.value) {
-                            _offlineMode.value = false
+                        if (homeScreenStockDataRepository.getHomeScreenStockDataCountForUser(
+                                getCurrentUserId().toString()
+                            ) == 0
+                        ) {
                             _loadingState.value = LoadingState.Error(message)
                         } else {
-                            _offlineMode.value = true
+
                             _loadingState.value = LoadingState.Success(Any())
+
                         }
                     } else {
-                        _offlineMode.value = false
                         _loadingState.value = LoadingState.Error(message)
                     }
                 }
@@ -77,12 +73,11 @@ class SplashScreenViewModel(
         }
     }
 
+    fun getCurrentUserId(): String? {
+        return authRepository.getCurrentUserId()
+    }
+
     fun isSignedIn(): Boolean {
         return authRepository.isSignedIn()
     }
-
-    fun updateDatabaseIsEmpty(value: Boolean) {
-        _databaseIsEmpty.value = value
-    }
-
 }

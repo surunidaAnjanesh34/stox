@@ -9,7 +9,8 @@ import uk.ac.tees.mad.stox.model.serviceapi.alphaVantageApiService
 import java.io.IOException
 
 class AlphaVantageRepository(private val apiService: alphaVantageApiService) {
-    private val API_KEY = "ULUBLAENL0134MJV"
+    private val API_KEY = "demo"
+    // "ULUBLAENL0134MJV"
 
     suspend fun getGlobalQuote(symbol: String): Result<GlobalQuoteResponse> {
         return withContext(Dispatchers.IO) {
