@@ -18,34 +18,45 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -65,29 +76,30 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.R
+import uk.ac.tees.mad.stox.model.dataclass.alphavantage.BestMatch
 import uk.ac.tees.mad.stox.model.dataclass.room.HomeScreenStockData
 import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.view.navigation.Dest
 import uk.ac.tees.mad.stox.viewmodel.HomeScreenViewModel
+import uk.ac.tees.mad.stox.viewmodel.SearchScreenViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+fun SearchScreen(
     navController: NavHostController,
-    viewmodel: HomeScreenViewModel = koinViewModel(),
-) {
-    val offlineMode by viewmodel.offlineMode.collectAsStateWithLifecycle()
+    viewModel: SearchScreenViewModel = koinViewModel()
+){
+    val offlineMode by viewModel.offlineMode.collectAsStateWithLifecycle()
 
-    val homeScreenUiState by viewmodel.homeScreenUiState.collectAsStateWithLifecycle()
-    val dataFromDB by viewmodel.dataFromDB.collectAsStateWithLifecycle()
+    val searchScreenUiState by viewModel.searchScreenUiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    LaunchedEffect(key1 = Unit) {
-        viewmodel.startLoading()
-    }
+    val searchText by viewModel.searchInput.collectAsStateWithLifecycle()
+    val isError by viewModel.isErrorInput.collectAsStateWithLifecycle()
+    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
 
     Scaffold(modifier = Modifier
         .fillMaxSize()
@@ -99,15 +111,8 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     Spacer(modifier = Modifier.padding(horizontal = 8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.stox),
-                        contentDescription = "App Logo",
-                        modifier = Modifier.size(36.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                    )
-                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                     Text(
-                        text = "Stox",
+                        text = "Search Stocks",
                         maxLines = 1,
                         fontSize = 30.sp,
                         overflow = TextOverflow.Ellipsis,
@@ -119,7 +124,21 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                    IconButton(
+                        onClick = { navController.popBackStack() }
+                    ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(36.dp),
+                        tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }, actions = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
                     AnimatedVisibility(offlineMode == true) {
 
                         Icon(
@@ -132,108 +151,130 @@ fun HomeScreen(
                     AnimatedVisibility(offlineMode == false) {
                         Icon(Icons.Outlined.CloudDone, "Online", tint = Color.Green)
                     }
-                }
-            }, actions = {
-                IconButton(onClick = {
-                    navController.navigate(Dest.SearchScreen)
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                IconButton(onClick = { /* doSomething() */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = "Localized description",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
                 }
             }, scrollBehavior = scrollBehavior
             )
         }) { innerPadding ->
-        when (homeScreenUiState) {
-            is LoadingState.Loading -> {
-                // Show a loading indicator
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+        Column(modifier = Modifier.padding(innerPadding)) {
+            DockedSearchBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = if (isError) SearchBarDefaults.inputFieldColors(MaterialTheme.colorScheme.error) else SearchBarDefaults.inputFieldColors(),
+                        query = searchText,
+                        onQueryChange = {
+                            viewModel.updateSearchInput(it)
+                            viewModel.updateIsErrorInput(false)
+                            //viewModel.searchIP(it)
+//                            val filteredText = it.filter { char -> char.isDigit() || char == '.' }
+//                            ipAddress = filteredText
+//                            isError = (!validateIpAddress(filteredText) && filteredText.isNotBlank())
+                        },
+                        onSearch = { newQuery ->
+//                            viewModel.updateSearchBarExpanded(false)
+                            viewModel.onSearch()
 
-            is LoadingState.Success -> {
-                val dataFromDB = dataFromDB
-                    //(homeScreenUiState as LoadingState.Success<List<HomeScreenStockData>>).data
-                if (dataFromDB.isEmpty()) {
+                        },
+                        expanded = false,
+                        onExpandedChange = {
+                            //viewModel.updateSearchBarExpanded(it)
+                        },
+                        placeholder = { Text("Search") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search, contentDescription = null
+                            )
+                        },
+                        trailingIcon = {
+                            AnimatedVisibility(searchText.isNotBlank()) {
+                                IconButton(onClick = {
+                                    if (searchText.isNotBlank()) {
+                                        viewModel.updateSearchInput("")
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Close, contentDescription = null)
+                                }}
+                        },
+                    )
+                },
+                expanded = false,
+                onExpandedChange = {},
+            ) {}
+            when (searchScreenUiState) {
+                is LoadingState.Loading -> {
+                    // Show a loading indicator
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
+                            .fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("No stocks added in favourites")
-                        Text("Search for stocks to add to favourites")
-                    }
-                } else {
-                    PullToRefreshBox(
-                        isRefreshing = false,
-                        onRefresh = { viewmodel.startLoading() },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                    ) {
-                        FavouriteStocksList(
-                            innerPadding = innerPadding,
-                            homeScreenStockDataList = dataFromDB,
-                            viewmodel = viewmodel
-                        )
-                    }
+                        if(searchText.isEmpty()){
+                            Text("Search for stocks")
+                        }
+                        if(isSearching){
+                        CircularProgressIndicator()}
 
+                    }
                 }
-            }
 
-            is LoadingState.Error -> {
-                // Show an error message
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(text = "Error: ${(homeScreenUiState as LoadingState.Error).message}")
+                is LoadingState.Success -> {
+                    val dataFromSearch =
+                        (searchScreenUiState as LoadingState.Success<List<BestMatch>>).data
+                    if (dataFromSearch.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text("No stocks found")
+                        }
+                    } else {
+
+                            SearchStocksList(
+                                searchScreenStockDataList = dataFromSearch,
+                                viewmodel = viewModel
+                            )
+
+                    }
+                }
+
+                is LoadingState.Error -> {
+                    // Show an error message
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = "Error: ${(searchScreenUiState as LoadingState.Error).message}")
+                    }
                 }
             }
         }
-
     }
 }
 
 @Composable
-fun FavouriteStocksList(
-    innerPadding: PaddingValues,
-    homeScreenStockDataList: List<HomeScreenStockData>,
-    viewmodel: HomeScreenViewModel
+fun SearchStocksList(
+    searchScreenStockDataList: List<BestMatch>,
+    viewmodel: SearchScreenViewModel
 ) {
-    LazyVerticalGrid(
-        GridCells.Adaptive(400.dp), modifier = Modifier.fillMaxSize()
+    LazyColumn (
+        modifier = Modifier.fillMaxSize()
     ) {
-        item(span = {
-            GridItemSpan(maxLineSpan)
-        }) {
+        item{
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "Favourite Stocks",
+                    text = "Search Results",
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -244,16 +285,16 @@ fun FavouriteStocksList(
                 )
             }
         }
-        items(homeScreenStockDataList, key = { it.id }) { stockItem ->
-            FavouriteStockItem(homeScreenStockDataItem = stockItem, viewmodel = viewmodel)
+        items(searchScreenStockDataList, key = { it.symbol }) { stockItem ->
+            SearchStockItem(searchScreenStockDataItem = stockItem, viewmodel = viewmodel)
         }
     }
 }
 
 @Composable
-fun FavouriteStockItem(
-    homeScreenStockDataItem: HomeScreenStockData,
-    viewmodel: HomeScreenViewModel
+fun SearchStockItem(
+    searchScreenStockDataItem: BestMatch,
+    viewmodel: SearchScreenViewModel
 ) {
     Card(
         elevation = CardDefaults.cardElevation(8.dp),
@@ -310,13 +351,16 @@ fun FavouriteStockItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = homeScreenStockDataItem.symbol,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = searchScreenStockDataItem.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
                 )
-                IconButton(onClick = { viewmodel.remove(homeScreenStockDataItem.symbol) }) {
+                IconButton(onClick = {
+                    //viewmodel.insert(seatchScreenStockDataItem.symbol)
+                }) {
                     Icon(
-                        imageVector = Icons.Filled.Delete,
+                        imageVector = Icons.Outlined.BookmarkAdd,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurface
                     )
@@ -331,53 +375,25 @@ fun FavouriteStockItem(
             ) {
                 Column {
                     Text(
-                        text = "₹${homeScreenStockDataItem.stockData.price}",
+                        text = "${searchScreenStockDataItem.symbol}",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (homeScreenStockDataItem.stockData.change.contains("-")) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
-                                contentDescription = null,
-                                tint = Color.Red
-                            )
-                            Spacer(modifier = Modifier.padding(4.dp))
                             Text(
-                                text = "${homeScreenStockDataItem.stockData.change} (${homeScreenStockDataItem.stockData.changePercent})",
+                                text = "Type: ${searchScreenStockDataItem.type}",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Red
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                contentDescription = null,
-                                tint = Color.Green
-                            )
-                            Text(
-                                text = "+${homeScreenStockDataItem.stockData.change} (+${homeScreenStockDataItem.stockData.changePercent})",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Green
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
-                        }
-                    }
+
                     Text(
-                        text = "Last Updated:",
+                        text = "Region: ${searchScreenStockDataItem.region}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "${
-                            SimpleDateFormat("HH:mm:ss, dd/MM/yyyy").format(
-                                    Date(
-                                        homeScreenStockDataItem.timestamp!!
-                                    )
-                                )
-                        }",
+                        text = "Currency: ${searchScreenStockDataItem.currency}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -385,23 +401,23 @@ fun FavouriteStockItem(
                 Column(
                     horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Bottom
                 ) {
+//                    Text(
+//                        text = "Previous Close: ₹${homeScreenStockDataItem.stockData.previousClose}",
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        color = MaterialTheme.colorScheme.onSurface
+//                    )
+//                    Text(
+//                        text = "Vol: ${homeScreenStockDataItem.stockData.volume}",
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        color = MaterialTheme.colorScheme.onSurface
+//                    )
                     Text(
-                        text = "Previous Close: ₹${homeScreenStockDataItem.stockData.previousClose}",
+                        text = "Open: ${searchScreenStockDataItem.marketOpen} Close: ${searchScreenStockDataItem.marketClose}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Vol: ${homeScreenStockDataItem.stockData.volume}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "H: ₹${homeScreenStockDataItem.stockData.high} L: ₹${homeScreenStockDataItem.stockData.low}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Last Trade: ${homeScreenStockDataItem.stockData.latestTradingDay}",
+                        text = "Timezone: ${searchScreenStockDataItem.timezone}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )

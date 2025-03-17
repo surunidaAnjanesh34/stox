@@ -17,6 +17,7 @@ import uk.ac.tees.mad.stox.model.room.HomeScreenStockDataItemTypeConverter
 import uk.ac.tees.mad.stox.model.room.StoxDatabase
 import uk.ac.tees.mad.stox.model.serviceapi.alphaVantageApiService
 import uk.ac.tees.mad.stox.viewmodel.HomeScreenViewModel
+import uk.ac.tees.mad.stox.viewmodel.SearchScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignUpScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SplashScreenViewModel
@@ -56,4 +57,5 @@ val appModule = module {
     viewModelOf(::SignInScreenViewModel)
     viewModelOf(::SignUpScreenViewModel)
     viewModelOf(::HomeScreenViewModel)
+    viewModelOf(::SearchScreenViewModel)
 }

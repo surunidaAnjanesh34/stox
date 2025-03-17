@@ -18,7 +18,6 @@ interface alphaVantageApiService {
     suspend fun searchSymbol(
         @Query("function") function: String = "SYMBOL_SEARCH",
         @Query("keywords") keywords: String,
-        @Query("datatype") datatype: String = "json",
         @Query("apikey") apiKey: String
     ): Response<SearchResponse>
 }

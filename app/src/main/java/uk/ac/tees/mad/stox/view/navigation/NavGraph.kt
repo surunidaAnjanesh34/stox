@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import uk.ac.tees.mad.stox.model.time.TrustedTimeManager
 import uk.ac.tees.mad.stox.ui.screens.HomeScreen
+import uk.ac.tees.mad.stox.ui.screens.SearchScreen
 import uk.ac.tees.mad.stox.ui.screens.SignInScreen
 import uk.ac.tees.mad.stox.ui.screens.SignUpScreen
 import uk.ac.tees.mad.stox.ui.screens.SplashScreen
@@ -40,14 +41,9 @@ fun SetupNavGraph(
                 composable<Dest.HomeScreen> {
                     HomeScreen(navController = navController)
                 }
-//            composable<Dest.NowPlayingScreen> {
-//                val args = it.toRoute<Dest.NowPlayingScreen>()
-//                NowPlayingScreen(
-//                    navController = navController,
-//                    trackId = args.trackId,
-//                    flag = args.flag
-//                )
-//            }
+            composable<Dest.SearchScreen> {
+                SearchScreen(navController = navController)
+            }
 //            composable<Dest.PlaylistScreen> {
 //                PlaylistScreen(
 //                    navController = navController
