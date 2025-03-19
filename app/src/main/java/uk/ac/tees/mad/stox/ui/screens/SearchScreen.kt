@@ -1,5 +1,6 @@
 package uk.ac.tees.mad.stox.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -9,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.BookmarkAdded
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
@@ -90,16 +93,25 @@ import java.util.Date
 fun SearchScreen(
     navController: NavHostController,
     viewModel: SearchScreenViewModel = koinViewModel()
-){
+) {
     val offlineMode by viewModel.offlineMode.collectAsStateWithLifecycle()
 
     val searchScreenUiState by viewModel.searchScreenUiState.collectAsStateWithLifecycle()
+    val dataFromDB by viewModel.dataFromDB.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val searchText by viewModel.searchInput.collectAsStateWithLifecycle()
     val isError by viewModel.isErrorInput.collectAsStateWithLifecycle()
     val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
+
+    BackHandler {
+        navController.navigate(Dest.HomeScreen){
+            popUpTo(Dest.HomeScreen){
+                inclusive = true
+            }
+        }
+    }
 
     Scaffold(modifier = Modifier
         .fillMaxSize()
@@ -125,13 +137,18 @@ fun SearchScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     IconButton(
-                        onClick = { navController.popBackStack() }
+                        onClick = { navController.navigate(Dest.HomeScreen){
+                            popUpTo(Dest.HomeScreen){
+                                inclusive = true
+                            }
+                        } }
                     ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(36.dp),
-                        tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(36.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }, actions = {
@@ -197,7 +214,8 @@ fun SearchScreen(
                                     }
                                 }) {
                                     Icon(Icons.Default.Close, contentDescription = null)
-                                }}
+                                }
+                            }
                         },
                     )
                 },
@@ -213,11 +231,12 @@ fun SearchScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        if(searchText.isEmpty()){
+                        if (searchText.isEmpty()) {
                             Text("Search for stocks")
                         }
-                        if(isSearching){
-                        CircularProgressIndicator()}
+                        if (isSearching) {
+                            CircularProgressIndicator()
+                        }
 
                     }
                 }
@@ -236,10 +255,11 @@ fun SearchScreen(
                         }
                     } else {
 
-                            SearchStocksList(
-                                searchScreenStockDataList = dataFromSearch,
-                                viewmodel = viewModel
-                            )
+                        SearchStocksList(
+                            searchScreenStockDataList = dataFromSearch,
+                            viewmodel = viewModel,
+                            dataFromDB = dataFromDB
+                        )
 
                     }
                 }
@@ -260,147 +280,166 @@ fun SearchScreen(
     }
 }
 
-@Composable
-fun SearchStocksList(
-    searchScreenStockDataList: List<BestMatch>,
-    viewmodel: SearchScreenViewModel
-) {
-    LazyColumn (
-        modifier = Modifier.fillMaxSize()
+
+    @Composable
+    fun SearchStocksList(
+        searchScreenStockDataList: List<BestMatch>,
+        viewmodel: SearchScreenViewModel,
+        dataFromDB: List<HomeScreenStockData>
     ) {
-        item{
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = "Search Results",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(16.dp)
-                )
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outline,
-                    thickness = 2.dp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-        }
-        items(searchScreenStockDataList, key = { it.symbol }) { stockItem ->
-            SearchStockItem(searchScreenStockDataItem = stockItem, viewmodel = viewmodel)
-        }
-    }
-}
-
-@Composable
-fun SearchStockItem(
-    searchScreenStockDataItem: BestMatch,
-    viewmodel: SearchScreenViewModel
-) {
-    Card(
-        elevation = CardDefaults.cardElevation(8.dp),
-        modifier = Modifier
-            .padding(12.dp)
-            .fillMaxWidth(),
-
-        border = BorderStroke(
-            2.dp, brush = Brush.horizontalGradient(
-                colors = listOf(
-                    MaterialTheme.colorScheme.surfaceContainerLowest,
-                    MaterialTheme.colorScheme.surfaceContainerHighest
-                ),
-                startX = 0f,
-                endX = 1000f,
-                tileMode = TileMode.Mirror,
-            )
-        )
-    ) {
-        // Infinite transition for the background gradient animation
-        val infiniteTransition = rememberInfiniteTransition(label = "background")
-        val targetOffset = with(LocalDensity.current) {
-            1000.dp.toPx()
-        }
-        val offset by infiniteTransition.animateFloat(
-            initialValue = 0f, targetValue = targetOffset, animationSpec = infiniteRepeatable(
-                tween(20000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
-            ), label = "offset"
-        )
-        val brushColors = listOf(
-            MaterialTheme.colorScheme.surfaceContainerHighest,
-            MaterialTheme.colorScheme.surfaceContainerLowest
-        )
-
-        Column(modifier = Modifier
-            .drawWithCache {
-                val brushSize = 400f
-                val brush = Brush.linearGradient(
-                    colors = brushColors,
-                    start = Offset(offset, offset),
-                    end = Offset(offset + brushSize, offset + brushSize),
-                    tileMode = TileMode.Mirror
-                )
-                onDrawBehind {
-                    drawRect(brush)
-                }
-            }
-            .padding(vertical = 16.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = searchScreenStockDataItem.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
-                IconButton(onClick = {
-                    //viewmodel.insert(seatchScreenStockDataItem.symbol)
-                }) {
-                    Icon(
-                        imageVector = Icons.Outlined.BookmarkAdd,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "Search Results",
+                        style = MaterialTheme.typography.headlineLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outline,
+                        thickness = 2.dp,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Column {
+            items(searchScreenStockDataList, key = { it.symbol }) { stockItem ->
+                SearchStockItem(searchScreenStockDataItem = stockItem, viewmodel = viewmodel, dataFromDB = dataFromDB)
+            }
+        }
+    }
+
+    @Composable
+    fun SearchStockItem(
+        searchScreenStockDataItem: BestMatch,
+        viewmodel: SearchScreenViewModel,
+        dataFromDB: List<HomeScreenStockData>
+    ) {
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth()
+                .clickable{
+
+                },
+
+            border = BorderStroke(
+                2.dp, brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surfaceContainerLowest,
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    ),
+                    startX = 0f,
+                    endX = 1000f,
+                    tileMode = TileMode.Mirror,
+                )
+            )
+        ) {
+            // Infinite transition for the background gradient animation
+            val infiniteTransition = rememberInfiniteTransition(label = "background")
+            val targetOffset = with(LocalDensity.current) {
+                1000.dp.toPx()
+            }
+            val offset by infiniteTransition.animateFloat(
+                initialValue = 0f, targetValue = targetOffset, animationSpec = infiniteRepeatable(
+                    tween(20000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
+                ), label = "offset"
+            )
+            val brushColors = listOf(
+                MaterialTheme.colorScheme.surfaceContainerHighest,
+                MaterialTheme.colorScheme.surfaceContainerLowest
+            )
+
+            Column(modifier = Modifier
+                .drawWithCache {
+                    val brushSize = 400f
+                    val brush = Brush.linearGradient(
+                        colors = brushColors,
+                        start = Offset(offset, offset),
+                        end = Offset(offset + brushSize, offset + brushSize),
+                        tileMode = TileMode.Mirror
+                    )
+                    onDrawBehind {
+                        drawRect(brush)
+                    }
+                }
+                .padding(vertical = 16.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = "${searchScreenStockDataItem.symbol}",
-                        style = MaterialTheme.typography.headlineLarge,
+                        text = searchScreenStockDataItem.name,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
-                            Text(
-                                text = "Type: ${searchScreenStockDataItem.type}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                    IconButton(onClick = {
+                        if (searchScreenStockDataItem.symbol in dataFromDB.map { it.symbol }) {
+                            viewmodel.remove(searchScreenStockDataItem.symbol)
+                        } else {
+                            viewmodel.insert(searchScreenStockDataItem.symbol)
+                        }
+                    }) {
+                        if (searchScreenStockDataItem.symbol in dataFromDB.map { it.symbol }) {
+                            Icon(
+                                imageVector = Icons.Filled.BookmarkAdded,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
-
-
-                    Text(
-                        text = "Region: ${searchScreenStockDataItem.region}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Currency: ${searchScreenStockDataItem.currency}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.BookmarkAdd,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
-                Column(
-                    horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Bottom
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
+                    Column {
+                        Text(
+                            text = "${searchScreenStockDataItem.symbol}",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Type: ${searchScreenStockDataItem.type}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+
+                        Text(
+                            text = "Region: ${searchScreenStockDataItem.region}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Currency: ${searchScreenStockDataItem.currency}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
 //                    Text(
 //                        text = "Previous Close: ₹${homeScreenStockDataItem.stockData.previousClose}",
 //                        style = MaterialTheme.typography.bodyMedium,
@@ -411,18 +450,18 @@ fun SearchStockItem(
 //                        style = MaterialTheme.typography.bodyMedium,
 //                        color = MaterialTheme.colorScheme.onSurface
 //                    )
-                    Text(
-                        text = "Open: ${searchScreenStockDataItem.marketOpen} Close: ${searchScreenStockDataItem.marketClose}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Timezone: ${searchScreenStockDataItem.timezone}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                        Text(
+                            text = "Open: ${searchScreenStockDataItem.marketOpen} Close: ${searchScreenStockDataItem.marketClose}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Timezone: ${searchScreenStockDataItem.timezone}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
     }
-}

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.stox.model.dataclass.alphavantage.BestMatch
 import uk.ac.tees.mad.stox.model.dataclass.room.HomeScreenStockData
+import uk.ac.tees.mad.stox.model.dataclass.room.HomeScreenStockDataItem
 import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
 import uk.ac.tees.mad.stox.model.repository.AlphaVantageRepository
 import uk.ac.tees.mad.stox.model.repository.AuthRepository
@@ -24,6 +25,9 @@ class SearchScreenViewModel(
 ) : ViewModel() {
     val isNetworkAvailable: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
+    private val _userId = MutableStateFlow<String?>(authRepository.getCurrentUserId())
+    val userId: StateFlow<String?> = _userId.asStateFlow()
+
     private val _offlineMode = MutableStateFlow<Boolean?>(null)
     val offlineMode: StateFlow<Boolean?> = _offlineMode.asStateFlow()
 
@@ -36,6 +40,9 @@ class SearchScreenViewModel(
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
+    private val _dataFromDB = MutableStateFlow<List<HomeScreenStockData>>(emptyList())
+    val dataFromDB: StateFlow<List<HomeScreenStockData>> = _dataFromDB.asStateFlow()
+
     private val _searchScreenUiState =
         MutableStateFlow<LoadingState<List<BestMatch>>>(LoadingState.Loading)
     val searchScreenUiState: StateFlow<LoadingState<List<BestMatch>>> =
@@ -43,6 +50,13 @@ class SearchScreenViewModel(
 
     init {
         observeNetworkConnectivity()
+        loadDataFromDB()
+    }
+
+    private fun loadDataFromDB() {
+        viewModelScope.launch {
+            _dataFromDB.value = homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
+        }
     }
 
     private fun observeNetworkConnectivity() {
@@ -93,4 +107,47 @@ class SearchScreenViewModel(
             }
         }
     }
+
+    fun insert(symbol: String) {
+        viewModelScope.launch {
+            val result = alphaVantageRepository.getGlobalQuote(symbol)
+            result.onSuccess { response ->
+                if (response.globalQuote != null) {
+                    val globalQuote = response.globalQuote
+                    val currentTime = trustedTimeManager.getCurrentTimeInMillis()
+                    val stockDataItemValues = HomeScreenStockDataItem(
+                        open = globalQuote.open,
+                        high = globalQuote.high,
+                        low = globalQuote.low,
+                        price = globalQuote.price,
+                        volume = globalQuote.volume,
+                        latestTradingDay = globalQuote.latestTradingDay,
+                        previousClose = globalQuote.previousClose,
+                        change = globalQuote.change,
+                        changePercent = globalQuote.changePercent
+                    )
+                    val stockData = HomeScreenStockData(
+                        userId = userId.value.toString(),
+                        symbol = symbol,
+                        stockData = stockDataItemValues,
+                        timestamp = if (currentTime != null) currentTime else System.currentTimeMillis()
+                    )
+                    homeScreenStockDataRepository.insertHomeScreenStockData(stockData)
+                }
+            }
+        }
+    }
+
+    fun remove(symbol: String) {
+        viewModelScope.launch {
+            homeScreenStockDataRepository.deleteHomeScreenStockDataForUserAndSymbol(
+                _userId.value.toString(), symbol
+            )
+            loadDataFromDB()
+        }
+    }
+
+//    fun isPresentinFavourites(symbol: String): Boolean {
+//        return symbol in dataFromDB.value.map { it.symbol }
+//    }
 }

@@ -66,7 +66,6 @@ class HomeScreenViewModel(
     fun startLoading() {
         viewModelScope.launch {
             _homeScreenUiState.value = LoadingState.Loading
-            _dataFromDB.value = homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
             _userId.value = getCurrentUserId().toString()
             if (homeScreenStockDataRepository.getHomeScreenStockDataCountForUser(_userId.value.toString()) == 0) {
                 _dataFromDB.value = emptyList()
@@ -108,7 +107,6 @@ class HomeScreenViewModel(
                                     userId.value.toString(), data.symbol
                                 )
                                 homeScreenStockDataRepository.insertHomeScreenStockData(stockData)
-                                _dataFromDB.value = homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
                             } else {
                                 _homeScreenUiState.value =
                                     LoadingState.Error("No data received from API\nNote: API rate limit is 25 requests per day")

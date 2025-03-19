@@ -33,4 +33,7 @@ interface HomeScreenStockDataDao {
 
     @Query("SELECT COUNT(*) FROM home_screen_stock_data WHERE userId = :userId")
     suspend fun getHomeScreenStockDataCountForUser(userId: String): Int
+
+    @Query("SELECT EXISTS (SELECT 1 FROM home_screen_stock_data WHERE userId = :userId AND symbol = :symbol)")
+    fun isPresentinFavourites(userId: String, symbol: String): Boolean
 }

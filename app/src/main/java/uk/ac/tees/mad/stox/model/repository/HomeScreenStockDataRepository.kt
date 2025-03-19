@@ -36,4 +36,8 @@ class HomeScreenStockDataRepository(private val homeScreenStockDataDao: HomeScre
     suspend fun getHomeScreenStockDataCountForUser(userId: String): Int {
         return homeScreenStockDataDao.getHomeScreenStockDataCountForUser(userId)
     }
+
+    suspend fun isPresentinFavourites(userId: String, symbol: String): Boolean {
+        return homeScreenStockDataDao.isPresentinFavourites(userId, symbol)
+    }
 }

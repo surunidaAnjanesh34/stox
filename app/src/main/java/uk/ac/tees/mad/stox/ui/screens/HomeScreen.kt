@@ -85,10 +85,6 @@ fun HomeScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    LaunchedEffect(key1 = Unit) {
-        viewmodel.startLoading()
-    }
-
     Scaffold(modifier = Modifier
         .fillMaxSize()
         .nestedScroll(scrollBehavior.nestedScrollConnection),
