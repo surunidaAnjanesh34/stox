@@ -27,7 +27,7 @@ sealed class Dest {
     data object SearchScreen : Dest()
 
     @Serializable
-    data object DetailsScreen : Dest()
+    data class DetailsScreen(val symbol: String) : Dest()
 
     @Serializable
     data object ProfileScreen : Dest()

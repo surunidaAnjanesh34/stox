@@ -9,6 +9,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -188,7 +189,8 @@ fun HomeScreen(
                         FavouriteStocksList(
                             innerPadding = innerPadding,
                             homeScreenStockDataList = dataFromDB,
-                            viewmodel = viewmodel
+                            viewmodel = viewmodel,
+                            navController = navController
                         )
                     }
 
@@ -216,7 +218,8 @@ fun HomeScreen(
 fun FavouriteStocksList(
     innerPadding: PaddingValues,
     homeScreenStockDataList: List<HomeScreenStockData>,
-    viewmodel: HomeScreenViewModel
+    viewmodel: HomeScreenViewModel,
+    navController: NavHostController
 ) {
     LazyVerticalGrid(
         GridCells.Adaptive(400.dp), modifier = Modifier.fillMaxSize()
@@ -241,7 +244,7 @@ fun FavouriteStocksList(
             }
         }
         items(homeScreenStockDataList, key = { it.id }) { stockItem ->
-            FavouriteStockItem(homeScreenStockDataItem = stockItem, viewmodel = viewmodel)
+            FavouriteStockItem(homeScreenStockDataItem = stockItem, viewmodel = viewmodel, navController = navController)
         }
     }
 }
@@ -249,13 +252,17 @@ fun FavouriteStocksList(
 @Composable
 fun FavouriteStockItem(
     homeScreenStockDataItem: HomeScreenStockData,
-    viewmodel: HomeScreenViewModel
+    viewmodel: HomeScreenViewModel,
+    navController: NavHostController
 ) {
     Card(
         elevation = CardDefaults.cardElevation(8.dp),
         modifier = Modifier
             .padding(12.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable{
+                navController.navigate(Dest.DetailsScreen(homeScreenStockDataItem.symbol))
+            },
 
         border = BorderStroke(
             2.dp, brush = Brush.horizontalGradient(
@@ -354,7 +361,7 @@ fun FavouriteStockItem(
                                 tint = Color.Green
                             )
                             Text(
-                                text = "+${homeScreenStockDataItem.stockData.change} (+${homeScreenStockDataItem.stockData.changePercent})",
+                                text = " +${homeScreenStockDataItem.stockData.change} (+${homeScreenStockDataItem.stockData.changePercent})",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Green
                             )

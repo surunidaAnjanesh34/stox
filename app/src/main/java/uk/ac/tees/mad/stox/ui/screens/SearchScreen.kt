@@ -186,10 +186,6 @@ fun SearchScreen(
                         onQueryChange = {
                             viewModel.updateSearchInput(it)
                             viewModel.updateIsErrorInput(false)
-                            //viewModel.searchIP(it)
-//                            val filteredText = it.filter { char -> char.isDigit() || char == '.' }
-//                            ipAddress = filteredText
-//                            isError = (!validateIpAddress(filteredText) && filteredText.isNotBlank())
                         },
                         onSearch = { newQuery ->
 //                            viewModel.updateSearchBarExpanded(false)
@@ -258,7 +254,8 @@ fun SearchScreen(
                         SearchStocksList(
                             searchScreenStockDataList = dataFromSearch,
                             viewmodel = viewModel,
-                            dataFromDB = dataFromDB
+                            dataFromDB = dataFromDB,
+                            navController = navController
                         )
 
                     }
@@ -285,7 +282,8 @@ fun SearchScreen(
     fun SearchStocksList(
         searchScreenStockDataList: List<BestMatch>,
         viewmodel: SearchScreenViewModel,
-        dataFromDB: List<HomeScreenStockData>
+        dataFromDB: List<HomeScreenStockData>,
+        navController: NavHostController
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -308,7 +306,7 @@ fun SearchScreen(
                 }
             }
             items(searchScreenStockDataList, key = { it.symbol }) { stockItem ->
-                SearchStockItem(searchScreenStockDataItem = stockItem, viewmodel = viewmodel, dataFromDB = dataFromDB)
+                SearchStockItem(searchScreenStockDataItem = stockItem, viewmodel = viewmodel, dataFromDB = dataFromDB, navController = navController)
             }
         }
     }
@@ -317,7 +315,8 @@ fun SearchScreen(
     fun SearchStockItem(
         searchScreenStockDataItem: BestMatch,
         viewmodel: SearchScreenViewModel,
-        dataFromDB: List<HomeScreenStockData>
+        dataFromDB: List<HomeScreenStockData>,
+        navController: NavHostController
     ) {
         Card(
             elevation = CardDefaults.cardElevation(8.dp),
@@ -325,7 +324,7 @@ fun SearchScreen(
                 .padding(12.dp)
                 .fillMaxWidth()
                 .clickable{
-
+                    navController.navigate(Dest.DetailsScreen(searchScreenStockDataItem.symbol))
                 },
 
             border = BorderStroke(

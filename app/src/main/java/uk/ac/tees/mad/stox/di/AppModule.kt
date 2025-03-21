@@ -16,6 +16,7 @@ import uk.ac.tees.mad.stox.model.retrofit.AlphaVantageRetrofitInstance
 import uk.ac.tees.mad.stox.model.room.HomeScreenStockDataItemTypeConverter
 import uk.ac.tees.mad.stox.model.room.StoxDatabase
 import uk.ac.tees.mad.stox.model.serviceapi.alphaVantageApiService
+import uk.ac.tees.mad.stox.viewmodel.DetailsScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.HomeScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SearchScreenViewModel
 import uk.ac.tees.mad.stox.viewmodel.SignInScreenViewModel
@@ -58,4 +59,5 @@ val appModule = module {
     viewModelOf(::SignUpScreenViewModel)
     viewModelOf(::HomeScreenViewModel)
     viewModelOf(::SearchScreenViewModel)
+    viewModelOf(::DetailsScreenViewModel)
 }
