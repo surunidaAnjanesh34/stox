@@ -34,6 +34,8 @@ class DetailsScreenViewModel(
     private val _dataFromDB = MutableStateFlow<List<HomeScreenStockData>>(emptyList())
     val dataFromDB: StateFlow<List<HomeScreenStockData>> = _dataFromDB.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _globalQuoteState =
         MutableStateFlow<LoadingState<GlobalQuote>>(LoadingState.Loading)
@@ -68,18 +70,22 @@ class DetailsScreenViewModel(
 
     fun getDetails(symbol: String) {
         viewModelScope.launch {
+            _isRefreshing.value = true
             _globalQuoteState.value = LoadingState.Loading
             val result = alphaVantageRepository.getGlobalQuote(symbol.toString())
             result.onSuccess { response ->
                 if (response.globalQuote != null) {
+                    _isRefreshing.value = false
                     val globalQuote = response.globalQuote
                     _globalQuoteState.value = LoadingState.Success(globalQuote)
                 } else {
+                    _isRefreshing.value = false
                     _globalQuoteState.value =
                         LoadingState.Error("No data received from API\nNote: API rate limit is 25 requests per day")
                 }
             }
             result.onFailure { error ->
+                _isRefreshing.value = false
                 _globalQuoteState.value = LoadingState.Error(error.message ?: "Unknown error")
             }
         }

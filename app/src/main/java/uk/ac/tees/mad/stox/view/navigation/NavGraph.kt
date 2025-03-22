@@ -43,16 +43,15 @@ fun SetupNavGraph(
                 composable<Dest.HomeScreen> {
                     HomeScreen(navController = navController)
                 }
-            composable<Dest.SearchScreen> {
-                SearchScreen(navController = navController)
-            }
-            composable<Dest.DetailsScreen> {
-                val args = it.toRoute<Dest.DetailsScreen>()
-                DetailsScreen(
-                    navController = navController,
-                    symbol = args.symbol
-                )
-            }
+                composable<Dest.SearchScreen> {
+                    SearchScreen(navController = navController)
+                }
+                composable<Dest.DetailsScreen> {
+                    val args = it.toRoute<Dest.DetailsScreen>()
+                    DetailsScreen(
+                        navController = navController, symbol = args.symbol
+                    )
+                }
 //            composable<Dest.ProfileScreen> {
 //                ProfileScreen(navController = navController)
 //            }

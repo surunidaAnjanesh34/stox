@@ -72,7 +72,8 @@ class HomeScreenViewModel(
                 _homeScreenUiState.value = LoadingState.Success(emptyList())
             } else {
                 if (offlineMode.value == true) {
-                    _dataFromDB.value = homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
+                    _dataFromDB.value =
+                        homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
                     _homeScreenUiState.value = LoadingState.Success(
                         homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
                     )
@@ -119,7 +120,8 @@ class HomeScreenViewModel(
                             return@launch
                         }
                     }
-                    _dataFromDB.value = homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
+                    _dataFromDB.value =
+                        homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
                     _homeScreenUiState.value = LoadingState.Success(
                         homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
                     )

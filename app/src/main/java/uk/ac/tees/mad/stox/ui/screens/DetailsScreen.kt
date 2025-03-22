@@ -8,7 +8,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,7 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,7 +60,6 @@ import androidx.navigation.NavHostController
 import org.koin.androidx.compose.koinViewModel
 import uk.ac.tees.mad.stox.model.dataclass.alphavantage.GlobalQuote
 import uk.ac.tees.mad.stox.model.dataclass.state.LoadingState
-import uk.ac.tees.mad.stox.view.navigation.Dest
 import uk.ac.tees.mad.stox.viewmodel.DetailsScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,9 +68,10 @@ fun DetailsScreen(
     navController: NavHostController,
     symbol: String,
     viewModel: DetailsScreenViewModel = koinViewModel()
-){
+) {
     val offlineMode by viewModel.offlineMode.collectAsStateWithLifecycle()
     val dataFromDB by viewModel.dataFromDB.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -102,9 +101,7 @@ fun DetailsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    IconButton(
-                        onClick = { navController.popBackStack() }
-                    ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -134,89 +131,97 @@ fun DetailsScreen(
                 }
             }, scrollBehavior = scrollBehavior
             )
-        }) {innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding)
+        }) { innerPadding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.getDetails(symbol) },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
         ) {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Row(
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                    Text(
-                        text = symbol,
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                        IconButton(onClick = {
-                            if (symbol in dataFromDB.map { it.symbol }) {
-                                viewModel.remove(symbol)
-                            } else {
-                                viewModel.insert(symbol)
-                            }
-                        }) {
-                            if (symbol in dataFromDB.map { it.symbol }) {
-                                Icon(
-                                    imageVector = Icons.Filled.BookmarkAdded,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Outlined.BookmarkAdd,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = symbol,
+                                style = MaterialTheme.typography.headlineLarge,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            IconButton(onClick = {
+                                if (symbol in dataFromDB.map { it.symbol }) {
+                                    viewModel.remove(symbol)
+                                } else {
+                                    viewModel.insert(symbol)
+                                }
+                            }) {
+                                if (symbol in dataFromDB.map { it.symbol }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.BookmarkAdded,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Outlined.BookmarkAdd,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outline,
+                            thickness = 2.dp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
                     }
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outline,
-                        thickness = 2.dp,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
                 }
-            }
-            item{
-                StockDetails(symbol = symbol, viewModel= viewModel)
-            }
+                item {
+                    StockDetails(symbol = symbol, viewModel = viewModel)
+                }
 //            item{
 //                StockHistoricalData(symbol = symbol)
 //            }
+            }
         }
     }
 }
 
 @Composable
-fun StockDetails(symbol: String, viewModel: DetailsScreenViewModel){
-    when(val state = viewModel.globalQuoteState.collectAsStateWithLifecycle().value){
+fun StockDetails(symbol: String, viewModel: DetailsScreenViewModel) {
+    when (val state = viewModel.globalQuoteState.collectAsStateWithLifecycle().value) {
         is LoadingState.Error -> {
             // Show an error message
             Column(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(text = "Error: ${state.message}")
             }
         }
+
         is LoadingState.Loading -> {
             // Show a loading indicator
             Column(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                    CircularProgressIndicator()
+                CircularProgressIndicator()
             }
         }
+
         is LoadingState.Success -> {
             val stockDetails = state.data
             StockDetailCard(symbol = symbol, stockDetails = stockDetails)
@@ -226,7 +231,7 @@ fun StockDetails(symbol: String, viewModel: DetailsScreenViewModel){
 }
 
 @Composable
-fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
+fun StockDetailCard(symbol: String, stockDetails: GlobalQuote) {
     Card(
         elevation = CardDefaults.cardElevation(8.dp),
         modifier = Modifier
@@ -280,7 +285,7 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column{
+                Column {
                     Text(
                         text = "₹${stockDetails.price}",
                         style = MaterialTheme.typography.headlineLarge,
@@ -330,21 +335,22 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.padding(4.dp))
-                    Card{
+                    Card {
                         Column(
                             modifier = Modifier.padding(8.dp)
-                        ){
-                    Text(
-                        text = "VOLUME:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${stockDetails.volume}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
-                    )}
+                        ) {
+                            Text(
+                                text = "VOLUME:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "${stockDetails.volume}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -352,27 +358,28 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
-            ){
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ){
-                    Column{
-                        Column{
-                        Text(
-                            text = "Open:",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "${stockDetails.open}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
-                        )}
+                ) {
+                    Column {
+                        Column {
+                            Text(
+                                text = "Open:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "${stockDetails.open}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Spacer(modifier = Modifier.padding(4.dp))
-                        Column{
+                        Column {
                             Text(
                                 text = "Low:",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -385,8 +392,9 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
                                 fontWeight = FontWeight.Bold
                             )
                         }
+
                     }
-                    Column{
+                    Column {
                         Column {
                             Text(
                                 text = "Previous Close:",
@@ -401,7 +409,7 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
                             )
                         }
                         Spacer(modifier = Modifier.padding(4.dp))
-                        Column{
+                        Column {
                             Text(
                                 text = "High:",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -423,17 +431,19 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote){
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun StockDetailCardPreview(){
-    StockDetailCard("IBM", GlobalQuote(
-        symbol = "IBM",
-        open = "261.5000",
-        high = "263.8450",
-        low = "259.5800",
-        price = "261.8700",
-        volume = "4398107",
-        latestTradingDay = "2025-02-24",
-        previousClose = "261.4800",
-        change = "0.3900",
-        changePercent = "0.1492%"
-    ))
+fun StockDetailCardPreview() {
+    StockDetailCard(
+        "IBM", GlobalQuote(
+            symbol = "IBM",
+            open = "261.5000",
+            high = "263.8450",
+            low = "259.5800",
+            price = "261.8700",
+            volume = "4398107",
+            latestTradingDay = "2025-02-24",
+            previousClose = "261.4800",
+            change = "0.3900",
+            changePercent = "0.1492%"
+        )
+    )
 }

@@ -45,7 +45,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -166,7 +165,7 @@ fun HomeScreen(
 
             is LoadingState.Success -> {
                 val dataFromDB = dataFromDB
-                    //(homeScreenUiState as LoadingState.Success<List<HomeScreenStockData>>).data
+                //(homeScreenUiState as LoadingState.Success<List<HomeScreenStockData>>).data
                 if (dataFromDB.isEmpty()) {
                     Column(
                         modifier = Modifier
@@ -244,7 +243,11 @@ fun FavouriteStocksList(
             }
         }
         items(homeScreenStockDataList, key = { it.id }) { stockItem ->
-            FavouriteStockItem(homeScreenStockDataItem = stockItem, viewmodel = viewmodel, navController = navController)
+            FavouriteStockItem(
+                homeScreenStockDataItem = stockItem,
+                viewmodel = viewmodel,
+                navController = navController
+            )
         }
     }
 }
@@ -260,7 +263,7 @@ fun FavouriteStockItem(
         modifier = Modifier
             .padding(12.dp)
             .fillMaxWidth()
-            .clickable{
+            .clickable {
                 navController.navigate(Dest.DetailsScreen(homeScreenStockDataItem.symbol))
             },
 
@@ -376,10 +379,10 @@ fun FavouriteStockItem(
                     Text(
                         text = "${
                             SimpleDateFormat("HH:mm:ss, dd/MM/yyyy").format(
-                                    Date(
-                                        homeScreenStockDataItem.timestamp!!
-                                    )
+                                Date(
+                                    homeScreenStockDataItem.timestamp!!
                                 )
+                            )
                         }",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
