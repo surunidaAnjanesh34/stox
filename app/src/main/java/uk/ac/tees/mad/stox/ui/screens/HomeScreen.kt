@@ -139,7 +139,7 @@ fun HomeScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = { /* doSomething() */ }) {
+                IconButton(onClick = { navController.navigate(Dest.ProfileScreen)}) {
                     Icon(
                         imageVector = Icons.Filled.AccountCircle,
                         contentDescription = "Localized description",

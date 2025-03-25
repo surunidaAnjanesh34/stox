@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import uk.ac.tees.mad.stox.model.time.TrustedTimeManager
 import uk.ac.tees.mad.stox.ui.screens.DetailsScreen
 import uk.ac.tees.mad.stox.ui.screens.HomeScreen
+import uk.ac.tees.mad.stox.ui.screens.ProfileScreen
 import uk.ac.tees.mad.stox.ui.screens.SearchScreen
 import uk.ac.tees.mad.stox.ui.screens.SignInScreen
 import uk.ac.tees.mad.stox.ui.screens.SignUpScreen
@@ -52,9 +53,9 @@ fun SetupNavGraph(
                         navController = navController, symbol = args.symbol
                     )
                 }
-//            composable<Dest.ProfileScreen> {
-//                ProfileScreen(navController = navController)
-//            }
+                composable<Dest.ProfileScreen> {
+                    ProfileScreen(navController = navController)
+                }
             }
         }
     }
