@@ -8,6 +8,9 @@ import android.view.animation.OvershootInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
@@ -16,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import uk.ac.tees.mad.stox.model.time.TrustedTimeManager
+import uk.ac.tees.mad.stox.ui.screens.LocalIsDarkMode
 import uk.ac.tees.mad.stox.ui.theme.StoxTheme
 import uk.ac.tees.mad.stox.view.navigation.SetupNavGraph
 import kotlin.getValue
@@ -58,11 +62,17 @@ class MainActivity : ComponentActivity() {
             }
         }
         setContent {
-            StoxTheme {
-                val navController = rememberNavController()
-                SetupNavGraph(
-                    navController = navController, trustedTimeManager = trustedTimeManager
-                )
+            val sharedPreferences = getSharedPreferences("app_settings", MODE_PRIVATE)
+            val isDarkMode = remember {
+                mutableStateOf(sharedPreferences.getBoolean("dark_mode", true))
+            }
+            CompositionLocalProvider(LocalIsDarkMode provides isDarkMode) {
+                StoxTheme(darkTheme = isDarkMode.value) {
+                    val navController = rememberNavController()
+                    SetupNavGraph(
+                        navController = navController, trustedTimeManager = trustedTimeManager
+                    )
+                }
             }
         }
     }

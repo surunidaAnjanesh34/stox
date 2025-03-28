@@ -51,7 +51,7 @@ class ProfileScreenViewModel(
         }
     }
 
-    private fun fetchUserDetails() {
+    fun fetchUserDetails() {
         viewModelScope.launch {
             authRepository.getCurrentUserDetails().collect { result ->
                 _userDetails.value = result

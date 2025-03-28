@@ -1,6 +1,7 @@
 package uk.ac.tees.mad.stox.ui.screens
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -9,6 +10,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,9 +25,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.AlertDialog
@@ -33,6 +37,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,15 +46,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -75,6 +84,11 @@ import uk.ac.tees.mad.stox.view.navigation.Dest
 import uk.ac.tees.mad.stox.view.navigation.SubGraph
 import uk.ac.tees.mad.stox.viewmodel.ProfileScreenViewModel
 
+val LocalIsDarkMode = staticCompositionLocalOf { mutableStateOf(true) }
+
+// Create a CompositionLocal for currency
+val LocalCurrency = staticCompositionLocalOf { mutableStateOf("USD") }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -84,10 +98,16 @@ fun ProfileScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val offlineMode by viewModel.offlineMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-    //val isDarkMode = LocalIsDarkMode.current
+    val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+    val isDarkMode = LocalIsDarkMode.current
     val userData by viewModel.userData.collectAsStateWithLifecycle()
     val userDetailsResult by viewModel.userDetails.collectAsStateWithLifecycle()
+
+    // Currency
+    var selectedCurrency by remember { mutableStateOf("USD") }
+    val selectedCurrencyState = remember { mutableStateOf(selectedCurrency) }
+    selectedCurrencyState.value = selectedCurrency
+
     Scaffold(modifier = Modifier
         .fillMaxSize()
         .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -153,9 +173,14 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-//            item {
-//                AppSettingsSection(isDarkMode, sharedPreferences)
-//            }
+            item {
+                AppSettingsSection(
+                    isDarkMode,
+                    sharedPreferences,
+                    onCurrencyChanged = { newCurrency ->
+                        selectedCurrency = newCurrency
+                    })
+            }
             item {
                 PersonalDetailsSection(userDetailsResult, userData, viewModel)
             }
@@ -163,6 +188,130 @@ fun ProfileScreen(
                 HorizontalDivider(modifier = Modifier.padding(8.dp), thickness = 2.dp)
                 SignOutSection(navController, viewModel)
             }
+        }
+    }
+}
+
+@Composable
+fun ChangeCurrency(onCurrencyChanged: (String) -> Unit) {
+    val currencies = listOf("USD", "EUR", "GBP", "JPY", "CAD") // Add more currencies as needed
+    var expanded by remember { mutableStateOf(false) }
+    val currentCurrency = LocalCurrency.current.value
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { expanded = !expanded },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text("Currency")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = currentCurrency)
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                currencies.forEach { currency ->
+                    DropdownMenuItem(text = { Text(currency) }, onClick = {
+                        onCurrencyChanged(currency)
+                        expanded = false
+                    })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppSettingsSection(
+    isDarkMode: MutableState<Boolean>,
+    sharedPreferences: SharedPreferences,
+    onCurrencyChanged: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        SectionHeader(
+            icon = Icons.Default.Settings, title = "App Settings"
+        )
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier.fillMaxSize(),
+            border = BorderStroke(
+                2.dp, brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surfaceContainerLowest,
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    ),
+                    startX = 0f,
+                    endX = 1000f,
+                    tileMode = TileMode.Mirror,
+                )
+            )
+
+        ) {
+            // Infinite transition for the background gradient animation
+            val infiniteTransition = rememberInfiniteTransition(label = "background")
+            val targetOffset = with(LocalDensity.current) {
+                1000.dp.toPx()
+            }
+            val offset by infiniteTransition.animateFloat(
+                initialValue = 0f, targetValue = targetOffset, animationSpec = infiniteRepeatable(
+                    tween(20000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
+                ), label = "offset"
+            )
+            val brushColors = listOf(
+                MaterialTheme.colorScheme.surfaceContainerHighest,
+                MaterialTheme.colorScheme.surfaceContainerLowest
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawWithCache {
+                        val brushSize = 400f
+                        val brush = Brush.linearGradient(
+                            colors = brushColors,
+                            start = Offset(offset, offset),
+                            end = Offset(offset + brushSize, offset + brushSize),
+                            tileMode = TileMode.Mirror
+                        )
+                        onDrawBehind {
+                            drawRect(brush)
+                        }
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                DarkModeToggle(isDarkMode, sharedPreferences)
+                HorizontalDivider(modifier = Modifier.padding(4.dp), thickness = 2.dp)
+                ChangeCurrency(onCurrencyChanged)
+            }
+        }
+    }
+}
+
+@Composable
+fun DarkModeToggle(isDarkMode: MutableState<Boolean>, sharedPreferences: SharedPreferences) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = Icons.Default.DarkMode, contentDescription = "Dark Mode")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Dark Mode")
+            Switch(checked = isDarkMode.value, onCheckedChange = {
+                isDarkMode.value = it
+                sharedPreferences.edit().putBoolean("dark_mode", it).apply()
+            })
         }
     }
 }
@@ -210,21 +359,20 @@ fun PersonalDetailsSection(
                 MaterialTheme.colorScheme.surfaceContainerHighest,
                 MaterialTheme.colorScheme.surfaceContainerLowest
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .drawWithCache {
-                        val brushSize = 400f
-                        val brush = Brush.linearGradient(
-                            colors = brushColors,
-                            start = Offset(offset, offset),
-                            end = Offset(offset + brushSize, offset + brushSize),
-                            tileMode = TileMode.Mirror
-                        )
-                        onDrawBehind {
-                            drawRect(brush)
-                        }
-                    },
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .drawWithCache {
+                    val brushSize = 400f
+                    val brush = Brush.linearGradient(
+                        colors = brushColors,
+                        start = Offset(offset, offset),
+                        end = Offset(offset + brushSize, offset + brushSize),
+                        tileMode = TileMode.Mirror
+                    )
+                    onDrawBehind {
+                        drawRect(brush)
+                    }
+                },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -265,7 +413,6 @@ fun PersonalDetailsSection(
 fun ProfileContent(userDetails: UserDetails, viewModel: ProfileScreenViewModel) {
     var showNameDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf("") }
-    LocalContext.current
 
     Column(
         modifier = Modifier
