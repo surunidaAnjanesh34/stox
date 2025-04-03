@@ -3,6 +3,7 @@ package uk.ac.tees.mad.stox.view.navigation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +25,7 @@ const val CARD_TRANSITION_KEY = "CARD_TRANSITION_KEY"
 fun SetupNavGraph(
     navController: NavHostController,
     trustedTimeManager: TrustedTimeManager,
+    isDarkMode: MutableState<Boolean>
 ) {
     SharedTransitionLayout {
         NavHost(
@@ -54,7 +56,7 @@ fun SetupNavGraph(
                     )
                 }
                 composable<Dest.ProfileScreen> {
-                    ProfileScreen(navController = navController)
+                    ProfileScreen(navController = navController, isDarkMode = isDarkMode)
                 }
             }
         }

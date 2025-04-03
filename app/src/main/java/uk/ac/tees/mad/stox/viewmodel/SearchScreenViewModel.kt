@@ -55,7 +55,8 @@ class SearchScreenViewModel(
 
     private fun loadDataFromDB() {
         viewModelScope.launch {
-            _dataFromDB.value = homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
+            _dataFromDB.value =
+                homeScreenStockDataRepository.getHomeScreenStockDataForUser(_userId.value.toString())
         }
     }
 
@@ -74,15 +75,15 @@ class SearchScreenViewModel(
         }
     }
 
-    fun updateSearchInput(newInput: String){
+    fun updateSearchInput(newInput: String) {
         _searchInput.value = newInput
     }
 
-    fun updateIsErrorInput(newInput: Boolean){
+    fun updateIsErrorInput(newInput: Boolean) {
         _isErrorInput.value = newInput
     }
 
-    fun onSearch(){
+    fun onSearch() {
         viewModelScope.launch {
             _searchScreenUiState.value = LoadingState.Loading
             _isSearching.value = true
@@ -102,8 +103,7 @@ class SearchScreenViewModel(
             result.onFailure { error ->
                 _isSearching.value = false
                 _isErrorInput.value = true
-                _searchScreenUiState.value =
-                    LoadingState.Error(error.message ?: "Unknown error")
+                _searchScreenUiState.value = LoadingState.Error(error.message ?: "Unknown error")
             }
         }
     }

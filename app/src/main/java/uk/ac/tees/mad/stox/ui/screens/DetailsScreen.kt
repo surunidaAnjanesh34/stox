@@ -391,6 +391,7 @@ fun StockDetailCard(symbol: String, stockDetails: GlobalQuote) {
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold
                             )
+
                         }
 
                     }

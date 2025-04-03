@@ -70,7 +70,9 @@ class MainActivity : ComponentActivity() {
                 StoxTheme(darkTheme = isDarkMode.value) {
                     val navController = rememberNavController()
                     SetupNavGraph(
-                        navController = navController, trustedTimeManager = trustedTimeManager
+                        navController = navController,
+                        trustedTimeManager = trustedTimeManager,
+                        isDarkMode = isDarkMode
                     )
                 }
             }

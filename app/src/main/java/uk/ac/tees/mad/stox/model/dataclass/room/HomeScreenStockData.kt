@@ -7,12 +7,10 @@ import uk.ac.tees.mad.stox.model.room.HomeScreenStockDataItemTypeConverter
 
 @Entity(tableName = "home_screen_stock_data")
 data class HomeScreenStockData(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userId: String,
     val symbol: String,
-    @TypeConverters(HomeScreenStockDataItemTypeConverter::class)
-    val stockData: HomeScreenStockDataItem,
+    @TypeConverters(HomeScreenStockDataItemTypeConverter::class) val stockData: HomeScreenStockDataItem,
     val timestamp: Long = System.currentTimeMillis()
 )
 

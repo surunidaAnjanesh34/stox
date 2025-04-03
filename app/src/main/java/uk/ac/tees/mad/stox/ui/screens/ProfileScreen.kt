@@ -10,7 +10,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,6 +51,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,9 +84,8 @@ import uk.ac.tees.mad.stox.view.navigation.Dest
 import uk.ac.tees.mad.stox.view.navigation.SubGraph
 import uk.ac.tees.mad.stox.viewmodel.ProfileScreenViewModel
 
+// Composition Locals
 val LocalIsDarkMode = staticCompositionLocalOf { mutableStateOf(true) }
-
-// Create a CompositionLocal for currency
 val LocalCurrency = staticCompositionLocalOf { mutableStateOf("USD") }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,99 +93,98 @@ val LocalCurrency = staticCompositionLocalOf { mutableStateOf("USD") }
 fun ProfileScreen(
     navController: NavHostController,
     viewModel: ProfileScreenViewModel = koinViewModel(),
+    isDarkMode: MutableState<Boolean>
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val offlineMode by viewModel.offlineMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-    val isDarkMode = LocalIsDarkMode.current
     val userData by viewModel.userData.collectAsStateWithLifecycle()
     val userDetailsResult by viewModel.userDetails.collectAsStateWithLifecycle()
 
     // Currency
     var selectedCurrency by remember { mutableStateOf("USD") }
-    val selectedCurrencyState = remember { mutableStateOf(selectedCurrency) }
-    selectedCurrencyState.value = selectedCurrency
 
-    Scaffold(modifier = Modifier
-        .fillMaxSize()
-        .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
-                    Text(
-                        text = "Profile",
-                        maxLines = 1,
-                        fontSize = 30.sp,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }, navigationIcon = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    IconButton(onClick = {
-                        navController.navigate(Dest.HomeScreen) {
-                            popUpTo(Dest.HomeScreen) {
-                                inclusive = true
+    CompositionLocalProvider(LocalCurrency provides remember { mutableStateOf(selectedCurrency) }) {
+        Scaffold(modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                // ... (TopAppBar code remains the same)
+                TopAppBar(title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                        Text(
+                            text = "Profile",
+                            maxLines = 1,
+                            fontSize = 30.sp,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }, navigationIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        IconButton(onClick = {
+                            navController.navigate(Dest.HomeScreen) {
+                                popUpTo(Dest.HomeScreen) {
+                                    inclusive = true
+                                }
                             }
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                modifier = Modifier.size(36.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            modifier = Modifier.size(36.dp),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
                     }
-                }
-            }, actions = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    AnimatedVisibility(offlineMode == true) {
+                }, actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        AnimatedVisibility(offlineMode == true) {
 
-                        Icon(
-                            Icons.Outlined.CloudOff,
-                            "Offline",
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                            Icon(
+                                Icons.Outlined.CloudOff,
+                                "Offline",
+                                tint = MaterialTheme.colorScheme.error
+                            )
 
+                        }
+                        AnimatedVisibility(offlineMode == false) {
+                            Icon(Icons.Outlined.CloudDone, "Online", tint = Color.Green)
+                        }
+                        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
                     }
-                    AnimatedVisibility(offlineMode == false) {
-                        Icon(Icons.Outlined.CloudDone, "Online", tint = Color.Green)
-                    }
-                    Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                }, scrollBehavior = scrollBehavior
+                )
+            }) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                item {
+                    AppSettingsSection(isDarkMode = isDarkMode, // Pass the hoisted state
+                        sharedPreferences = sharedPreferences, onCurrencyChanged = { newCurrency ->
+                            selectedCurrency = newCurrency
+                        })
                 }
-            }, scrollBehavior = scrollBehavior
-            )
-        }) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            item {
-                AppSettingsSection(
-                    isDarkMode,
-                    sharedPreferences,
-                    onCurrencyChanged = { newCurrency ->
-                        selectedCurrency = newCurrency
-                    })
-            }
-            item {
-                PersonalDetailsSection(userDetailsResult, userData, viewModel)
-            }
-            item {
-                HorizontalDivider(modifier = Modifier.padding(8.dp), thickness = 2.dp)
-                SignOutSection(navController, viewModel)
+                item {
+                    PersonalDetailsSection(userDetailsResult, userData, viewModel)
+                }
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(8.dp), thickness = 2.dp)
+                    SignOutSection(navController, viewModel)
+                }
             }
         }
     }
@@ -198,34 +196,31 @@ fun ChangeCurrency(onCurrencyChanged: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val currentCurrency = LocalCurrency.current.value
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { expanded = !expanded },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text("Currency")
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = currentCurrency)
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                currencies.forEach { currency ->
-                    DropdownMenuItem(text = { Text(currency) }, onClick = {
-                        onCurrencyChanged(currency)
-                        expanded = false
-                    })
+    DetailRow(icon = Icons.Default.Settings,
+        iconDesc = "Currency",
+        label = "Currency",
+        value = currentCurrency,
+        endContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    currencies.forEach { currency ->
+                        DropdownMenuItem(text = { Text(currency) }, onClick = {
+                            onCurrencyChanged(currency)
+                            expanded = false
+                        })
+                    }
+                }
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(imageVector = Icons.Filled.Edit, contentDescription = "Change Currency")
                 }
             }
-        }
-    }
+        })
 }
 
 @Composable
 fun AppSettingsSection(
-    isDarkMode: MutableState<Boolean>,
-    sharedPreferences: SharedPreferences,
-    onCurrencyChanged: (String) -> Unit
+    isDarkMode: MutableState<Boolean>, // Hoisted state
+    sharedPreferences: SharedPreferences, onCurrencyChanged: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -293,27 +288,17 @@ fun AppSettingsSection(
 
 @Composable
 fun DarkModeToggle(isDarkMode: MutableState<Boolean>, sharedPreferences: SharedPreferences) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(imageVector = Icons.Default.DarkMode, contentDescription = "Dark Mode")
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Dark Mode")
-            Switch(checked = isDarkMode.value, onCheckedChange = {
-                isDarkMode.value = it
-                sharedPreferences.edit().putBoolean("dark_mode", it).apply()
+    val currentIsDarkMode = LocalIsDarkMode.current.value
+    DetailRow(icon = Icons.Default.DarkMode,
+        iconDesc = "Dark Mode",
+        label = "Dark Mode",
+        value = if (currentIsDarkMode) "On" else "Off",
+        endContent = {
+            Switch(checked = isDarkMode.value, onCheckedChange = { newValue ->
+                isDarkMode.value = newValue // Update the hoisted state directly
+                sharedPreferences.edit().putBoolean("dark_mode", newValue).apply()
             })
-        }
-    }
+        })
 }
 
 @Composable
@@ -322,6 +307,7 @@ fun PersonalDetailsSection(
     userData: UserData,
     viewModel: ProfileScreenViewModel
 ) {
+    LocalIsDarkMode.current.value
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -359,20 +345,21 @@ fun PersonalDetailsSection(
                 MaterialTheme.colorScheme.surfaceContainerHighest,
                 MaterialTheme.colorScheme.surfaceContainerLowest
             )
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .drawWithCache {
-                    val brushSize = 400f
-                    val brush = Brush.linearGradient(
-                        colors = brushColors,
-                        start = Offset(offset, offset),
-                        end = Offset(offset + brushSize, offset + brushSize),
-                        tileMode = TileMode.Mirror
-                    )
-                    onDrawBehind {
-                        drawRect(brush)
-                    }
-                },
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawWithCache {
+                        val brushSize = 400f
+                        val brush = Brush.linearGradient(
+                            colors = brushColors,
+                            start = Offset(offset, offset),
+                            end = Offset(offset + brushSize, offset + brushSize),
+                            tileMode = TileMode.Mirror
+                        )
+                        onDrawBehind {
+                            drawRect(brush)
+                        }
+                    },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
